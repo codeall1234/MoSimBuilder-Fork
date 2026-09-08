@@ -237,7 +237,7 @@ public class BuildNode: MonoBehaviour
                         switch (action.ControlType)
                         {
                             case NodeControlType.Hold:
-                                if (buttonHeld && action.PieceType == currentGamePiece.pieceType)
+                                if (buttonHeld && action.IsValidPiece(currentGamePiece.pieceType))
                                 {
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
@@ -246,7 +246,7 @@ public class BuildNode: MonoBehaviour
                                 }
                                 break;
                             case NodeControlType.Tap:
-                                if (buttonPressed && action.PieceType == currentGamePiece.pieceType)
+                                if (buttonPressed && action.IsValidPiece(currentGamePiece.pieceType))
                                 {
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
@@ -255,7 +255,7 @@ public class BuildNode: MonoBehaviour
                                 }
                                 break;
                             case NodeControlType.AlwaysPerform:
-                                if (action.PieceType == currentGamePiece.pieceType)
+                                if (action.IsValidPiece(currentGamePiece.pieceType))
                                 {
                                     if (!PerformTimerCheck(ref action)) break;
                                     actionDone = true;
@@ -290,7 +290,7 @@ public class BuildNode: MonoBehaviour
 
     private IEnumerator TransferPieceCo(bool buttonPressed, NodeAction action)
     {
-        if (action.PieceType != currentGamePiece.pieceType)
+        if (!action.IsValidPiece(currentGamePiece.pieceType))
         {
             yield return null;
         }
@@ -329,14 +329,14 @@ public class BuildNode: MonoBehaviour
     private bool TransferPiece(bool button, bool butonPressed, ref NodeAction action)
     {
         if (!currentGamePiece) return false;
-        if (action.PieceType != currentGamePiece.pieceType)
+        if (!action.IsValidPiece(currentGamePiece.pieceType))
         {
             return false;
         }
         if (!PerformTimerCheck(ref action, butonPressed, true)) return false;
         var succeeded = false;
         if (!currentGamePiece) return false;
-        if (currentGamePiece.pieceType != action.PieceType) return false;
+        if (!action.IsValidPiece(currentGamePiece.pieceType)) return false;
         if (button && currentGamePiece)
         {
             if (action.Animate)
@@ -423,7 +423,7 @@ public class BuildNode: MonoBehaviour
             var objectThing = coll.gameObject;
             var piece = Utils.FindParentObjectComponent<GamePiece>(objectThing);
             if (!piece) continue;
-            if (piece.pieceType != action.PieceType || piece.state != GamePieceState.World) continue;
+            if (!action.IsValidPiece(piece.pieceType) || piece.state != GamePieceState.World) continue;
             pieces.Add(piece);
         }
         
@@ -488,16 +488,29 @@ public class NodeAction
     [ConditionalField(true, nameof(IsTransfer))]
     public BuildNode MoveTo;
 
+    [Header("Outake Settings")]
     [ConditionalField(true, nameof(IsOuttake))]
     public Direction Direction;
 
     [ConditionalField(true, nameof(IsOuttake))]
     public Vector3 Spin;
+    
+    [ConditionalField(true, nameof(IsOuttake))]
+    public Vector3 OuttakeRotationOffset;
 
     [ConditionalField(true, nameof(IsNotIntake))]
     public float DelayTimer;
 
     [Header("General Settings")] public PieceNames PieceType;
+    public List<PieceNames> AdditionalPieceTypes = new List<PieceNames>();
+    
+    public bool IsValidPiece(PieceNames type)
+    {
+        if (PieceType == type) return true;
+        if (AdditionalPieceTypes != null && AdditionalPieceTypes.Contains(type)) return true;
+        return false;
+    }
+
     public NodeControlType ControlType;
     [HideInInspector] public float performTimer;
     public ControllerInputs ControllerButton;

@@ -380,16 +380,14 @@ public class JointController : MonoBehaviour
                 }
             }
 
-            rawPID = _pidController.UpdateAngle(Time.time - _lastUpdateTimestamp, currentPosition, targetForPid);
+            rawPID = _pidController.UpdateAngle(Time.fixedDeltaTime, currentPosition, targetForPid);
             joint.targetAngularVelocity = rawPID * driveAxis;
         }
         else
         {
-            rawPID = _pidController.UpdateLinear(Time.time - _lastUpdateTimestamp, currentPosition, _targetPosition);
+            rawPID = _pidController.UpdateLinear(Time.fixedDeltaTime, currentPosition, _targetPosition);
             joint.targetVelocity = -rawPID * driveAxis;
         }
-
-        _lastUpdateTimestamp = Time.time;
     }
 
     private bool PassesThroughWrapAngle(float currentAngle, float targetAngle, float wrapAngle)
@@ -424,7 +422,7 @@ public class JointController : MonoBehaviour
 
     private void ResetSequence(bool shouldHome)
     {
-        Debug.Log("Reset sequence");
+        // Debug.Log("Reset sequence");
         _sequenceInterrupted = false;
         _nextSequencePoint = null;
         _activeSequenceName = null;

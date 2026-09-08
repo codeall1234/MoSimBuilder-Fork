@@ -65,23 +65,11 @@ namespace BuilderLib
         
             // Calculate target rotation based on movement direction
             Quaternion targetRotation = target.rotation;
-            Quaternion shortestTargetRotation;
-            if (piece.pieceType == PieceNames.Coral)
-            {
-                shortestTargetRotation = FindShortestSymmetricRotation(
-                    transform.rotation,
-                    targetRotation
-                );
-            }
-            else
-            {
-                shortestTargetRotation = targetRotation;
-            }
-        
+            
             // Smoothly rotate towards target rotation
             transform.rotation = Quaternion.RotateTowards(
                 transform.rotation,
-                shortestTargetRotation,
+                targetRotation,
                 action.AngularSpeed * Time.deltaTime  // Changed from Time.fixedDeltaTime to Time.deltaTime
             );
         
@@ -124,7 +112,7 @@ namespace BuilderLib
         {
             if (!piece) return false;
             if (!piece.owner) return false;
-            if (piece.pieceType != action.PieceType) return false;
+            if (!action.IsValidPiece(piece.pieceType)) return false;
             var speed = action.overideSpeed * 0.0254f ?? action.Speed * 0.0254f;
             action.overideSpeed = null;
             var rb = piece.rb;
@@ -132,7 +120,8 @@ namespace BuilderLib
 
             rb.velocity = Vector3.zero;
             piece.transform.localPosition = Vector3.zero;
-            piece.transform.localEulerAngles = Vector3.zero;
+            piece.transform.localEulerAngles = action.OuttakeRotationOffset;
+
             Vector3 velocity;
             switch (action.Direction)
             {

@@ -10,17 +10,17 @@ public class FieldScorer : MonoBehaviour
 {
     [Tooltip("this will display a blue box around the scoring node when in the editor")]
     [SerializeField] private bool displayDebugBox = false;
-    [SerializeField] private bool isBlue;
-    [SerializeField] private int scoreToAdd;
-    [SerializeField] private int autoScoreToAdd;
+    [SerializeField] protected bool isBlue;
+    [SerializeField] protected int scoreToAdd;
+    [SerializeField] protected int autoScoreToAdd;
     [SerializeField] protected PieceNames[] scorePieces;
     private readonly HashSet<PieceNames> scorePiecesSet = new HashSet<PieceNames>();
-    [SerializeField] private Collider[] occupyColliders;
+    [SerializeField] public Collider[] occupyColliders;
     private readonly HashSet<GamePiece> uniquePieces = new HashSet<GamePiece>();
-    private Vector3[] halfExtents;
+    protected Vector3[] halfExtents;
     protected List<GamePiece> occupyObjects = new List<GamePiece>();
     private List<GamePiece> pieces = new List<GamePiece>();
-    private LayerMask peiceMask;
+    protected LayerMask peiceMask;
 
     private int lastAddedPoints;
 
@@ -38,22 +38,39 @@ public class FieldScorer : MonoBehaviour
             Vector3 localHalfExtents = Vector3.zero;
             int index = occupyColliders.IndexOfItem(coll);
 
-            if (coll is BoxCollider boxCollider)
-            {
-                localHalfExtents = boxCollider.size / 2f;
-            }
+                if (coll is BoxCollider boxCollider)
+                {
+                    // Incorporate the transform's scale and ensure all components are positive
+                    Vector3 scale = coll.transform.lossyScale;
+                    Vector3 safeSize = new Vector3(
+                        Mathf.Abs(boxCollider.size.x * scale.x),
+                        Mathf.Abs(boxCollider.size.y * scale.y),
+                        Mathf.Abs(boxCollider.size.z * scale.z));
+                    localHalfExtents = safeSize / 2f;
+                }
             else if (coll is CapsuleCollider capsuleCollider)
             {
+                // Apply scale and ensure positive dimensions
+                Vector3 scale = coll.transform.lossyScale;
                 switch (capsuleCollider.direction)
                 {
-                    case 0://x
-                        localHalfExtents = new Vector3(capsuleCollider.height / 2f, capsuleCollider.radius, capsuleCollider.radius);
+                    case 0: // x
+                        localHalfExtents = new Vector3(
+                            Mathf.Abs(capsuleCollider.height * scale.x) / 2f,
+                            Mathf.Abs(capsuleCollider.radius * scale.y),
+                            Mathf.Abs(capsuleCollider.radius * scale.z));
                         break;
-                    case 1://y
-                        localHalfExtents = new Vector3(capsuleCollider.radius, capsuleCollider.height / 2f, capsuleCollider.radius);
+                    case 1: // y
+                        localHalfExtents = new Vector3(
+                            Mathf.Abs(capsuleCollider.radius * scale.x),
+                            Mathf.Abs(capsuleCollider.height * scale.y) / 2f,
+                            Mathf.Abs(capsuleCollider.radius * scale.z));
                         break;
-                    case 2://z
-                        localHalfExtents = new Vector3(capsuleCollider.radius, capsuleCollider.radius, capsuleCollider.height / 2f);
+                    case 2: // z
+                        localHalfExtents = new Vector3(
+                            Mathf.Abs(capsuleCollider.radius * scale.x),
+                            Mathf.Abs(capsuleCollider.radius * scale.y),
+                            Mathf.Abs(capsuleCollider.height * scale.z) / 2f);
                         break;
                 }
             }
@@ -135,7 +152,7 @@ public class FieldScorer : MonoBehaviour
         return isBlue;
     }
 
-    private void OnDrawGizmosSelected()
+    protected virtual void OnDrawGizmos()
     {
         if (!displayDebugBox) return;
         if (occupyColliders == null || halfExtents == null) return;

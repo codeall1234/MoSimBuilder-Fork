@@ -208,7 +208,9 @@ namespace Util
     {
         Coral,
         Algae,
-        Fuel
+        Fuel,
+        Carrot,
+        CarrotCake
     }
 
     public enum GamePieceState

@@ -113,6 +113,19 @@ public class SwerveController : MonoBehaviour
         inputsOveridable = disruptable;
     }
 
+    void Update()
+    {
+        if (Gamepad.current != null && Gamepad.current.rightStickButton.wasPressedThisFrame)
+        {
+            reversed = !reversed;
+            var loadMatch = FindFirstObjectByType<LoadMatch>();
+            if (loadMatch != null)
+            {
+                loadMatch.TogglePOV();
+            }
+        }
+    }
+
     // Update is called once per frame
     void FixedUpdate()
     {

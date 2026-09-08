@@ -61,6 +61,11 @@ namespace Util
             } : point;
         }
 
+        public void SetPointValue(float val)
+        {
+            point = val;
+        }
+
         public bool getPersist()
         {
             return persist;

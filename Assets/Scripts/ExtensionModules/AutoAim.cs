@@ -10,6 +10,7 @@ public class AutoAim : MonoBehaviour
 {
     [SerializeField] private TargetType targetType;
     [SerializeField] private AimAtWhen targetWhen;
+    [SerializeField] private float angleOffset = 0f;
     
     [Header("Targeting Settings")]
     [ConditionalField(true, nameof(IsPreset))]
@@ -136,7 +137,7 @@ public class AutoAim : MonoBehaviour
         }
         
         Vector3 target = GetTargetValue();
-        float targetAngle = CalculateTargetAngle(target) + 180;
+        float targetAngle = CalculateTargetAngle(target) + 180 + angleOffset;
         float currentAngle = transform.localRotation.eulerAngles.y;
         
         // Use PID controller to calculate smooth steering output

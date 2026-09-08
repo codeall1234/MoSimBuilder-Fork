@@ -96,6 +96,19 @@ public class LoadMatch : MonoBehaviour
         CheckRobots(); 
     }
     
+    private GameObject GetSelectedFieldPrefab()
+    {
+        if (fieldPrefab == null || fieldPrefab.Length == 0) return null;
+        foreach (var prefab in fieldPrefab)
+        {
+            if (prefab != null && prefab.name == selectedSeasonName)
+            {
+                return prefab;
+            }
+        }
+        return fieldPrefab[0];
+    }
+
     private void LoadField()
     {
         _fieldHolder = new GameObject
@@ -104,7 +117,11 @@ public class LoadMatch : MonoBehaviour
             transform = { position = Vector3.zero, rotation = Quaternion.identity, parent = transform },
             
         };
-        Instantiate(fieldPrefab[0], Vector3.zero, Quaternion.identity, _fieldHolder.transform);
+        GameObject prefabToLoad = GetSelectedFieldPrefab();
+        if (prefabToLoad != null)
+        {
+            Instantiate(prefabToLoad, Vector3.zero, Quaternion.identity, _fieldHolder.transform);
+        }
     }
     
     private bool CheckField()
@@ -115,7 +132,12 @@ public class LoadMatch : MonoBehaviour
         }
         else
         {
-            return _fieldHolder.transform.Find(fieldPrefab[0].name+"(Clone)");
+            GameObject prefabToLoad = GetSelectedFieldPrefab();
+            if (prefabToLoad != null)
+            {
+                return _fieldHolder.transform.Find(prefabToLoad.name+"(Clone)");
+            }
+            return false;
         }
     }
     
@@ -164,7 +186,35 @@ public class LoadMatch : MonoBehaviour
             Transform spawnLocation = useCustomSpawnPoint ? spawnPoint : 
                                         fms != null ? fms.defaultSpawn : 
                                                         spawnPoint;
-            _activeRobot = Instantiate(robotToSpawn, spawnLocation.position, spawnLocation.rotation, _fieldHolder.transform);
+            
+            if (spawnLocation == null && _fieldHolder != null)
+            {
+                var fmsObj = _fieldHolder.GetComponentInChildren<FMS>();
+                if (fmsObj != null && fmsObj.defaultSpawn != null)
+                {
+                    spawnLocation = fmsObj.defaultSpawn;
+                    fms = fmsObj;
+                }
+                else
+                {
+                    // Fallback to searching by name
+                    Transform[] transforms = _fieldHolder.GetComponentsInChildren<Transform>(true);
+                    foreach (Transform t in transforms)
+                    {
+                        if (t.name == "DefaultSpawn")
+                        {
+                            spawnLocation = t;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            Vector3 pos = spawnLocation != null ? spawnLocation.position : Vector3.zero;
+            Quaternion rot = spawnLocation != null ? spawnLocation.rotation : Quaternion.identity;
+
+            _activeRobot = Instantiate(robotToSpawn, pos, rot, _fieldHolder.transform);
+
             var frame = _activeRobot.GetComponent<BuildFrame>();
             var controller = frame.GetSwerveController();
             if (controller)
@@ -228,6 +278,17 @@ public class LoadMatch : MonoBehaviour
         _spawnedCamera.transform.localPosition = Vector3.zero;
     }
 
+    public void TogglePOV()
+    {
+        if (view == Cameras.ThirdPerson) view = Cameras.ReversedThirdPerson;
+        else if (view == Cameras.ReversedThirdPerson) view = Cameras.ThirdPerson;
+        else if (view == Cameras.FirstPerson) view = Cameras.FirstPersonReversed;
+        else if (view == Cameras.FirstPersonReversed) view = Cameras.FirstPerson;
+        else return;
+
+        if (_spawnedCamera != null) Destroy(_spawnedCamera);
+        addCamera();
+    }
     
     public void CheckSeasons() 
     {

@@ -73,6 +73,8 @@ public class SpawnGamePiece : MonoBehaviour
         if (!CanSpawn() || !_piecesMap.TryGetValue(pieceTypeEnum, out GameObject piecePrefab)) 
             return;
 
+        // Add a tiny upward offset so spawned pieces settle inside colliders
+        spawnPosition.y += 0.05f;
         var item = Instantiate(piecePrefab, spawnPosition, transform.rotation, transform)
             .GetComponent<GamePiece>();
     
