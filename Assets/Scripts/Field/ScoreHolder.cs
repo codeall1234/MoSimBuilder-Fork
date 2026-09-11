@@ -16,6 +16,8 @@ public class ScoreHolder : MonoBehaviour
     {
         BlueScore = 0;
         RedScore = 0;
+        Util.BoxScorer.ResetScoredPieces();
+        Field.SeasonSpecific.HarvestHavocPantry.ResetAllSlots();
 
         var dispB = GameObject.Find("BlueScoreDisplay");
         if (dispB != null)

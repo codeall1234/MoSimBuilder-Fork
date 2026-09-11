@@ -37,44 +37,8 @@ namespace Field.SeasonSpecific
 
         void FixedUpdate()
         {
-            occupyObjects = occupyPieces();
-            
-            // Score 2 points per piece in the oven (1 * autoScoreToAdd which is 2)
-            ScorePoints(occupyObjects.Count);
-
-            // Find all Carrots and CarrotCakes in the oven
-            List<GamePiece> carrots = new List<GamePiece>();
-            foreach (var piece in occupyObjects)
-            {
-                if (piece.pieceType == PieceNames.Carrot)
-                {
-                    carrots.Add(piece);
-                }
-                else if (piece.pieceType == PieceNames.CarrotCake)
-                {
-                    // Carrot cakes scored in the oven are immediately recirculated
-                    Destroy(piece.gameObject);
-                    SpawnCarrotCake();
-                }
-            }
-
-            // Simulate Human Player recirculation (trade 3 Carrots for 1 Carrot Cake)
-            if (carrots.Count >= 3)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    Destroy(carrots[i].gameObject);
-                }
-                SpawnCarrotCake();
-            }
-        }
-
-        private void SpawnCarrotCake()
-        {
-            if (carrotCakePrefab != null && depotSpawnPoint != null)
-            {
-                Instantiate(carrotCakePrefab, depotSpawnPoint.position, depotSpawnPoint.rotation);
-            }
+            // Scoring is handled by BoxScorer trigger. Pieces remain in the oven.
+            return;
         }
     }
 }

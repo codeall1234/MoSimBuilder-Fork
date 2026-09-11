@@ -1,6 +1,7 @@
 using UnityEngine;
 using Util;
 using System.Collections.Generic;
+using Field.SeasonSpecific;
 
 namespace Util
 {
@@ -19,7 +20,7 @@ namespace Util
         public Transform cakeDepot;               // Where to spawn a new cake
         public GameObject carrotCakePrefab;       // Prefab to instantiate
 
-        private static readonly HashSet<int> _scoredThisFrame = new HashSet<int>();
+        private static readonly HashSet<int> _scoredPieces = new HashSet<int>();
 
         private void OnTriggerEnter(Collider other)
         {
@@ -27,12 +28,11 @@ namespace Util
             var piece = Utils.FindParentObjectComponent<GamePiece>(other.gameObject);
             if (piece == null || piece.state != GamePieceState.World) return;
 
-            // Prevent double scoring within same frame
+            // Prevent double scoring
             int instanceId = piece.gameObject.GetInstanceID();
-            if (_scoredThisFrame.Contains(instanceId)) return;
-            _scoredThisFrame.Add(instanceId);
+            if (_scoredPieces.Contains(instanceId)) return;
 
-            // Award points based on piece type
+            // Determine points based on piece type
             int points = 0;
             bool isCake = false;
             if (piece.pieceType == PieceNames.Carrot)
@@ -49,11 +49,50 @@ namespace Util
                 return; // Not a piece we care about
             }
 
+            // Check if this scorer is on a Pantry shelf (5 pieces per level max)
+            var pantry = GetComponent<HarvestHavocPantry>();
+            if (pantry == null) pantry = GetComponentInParent<HarvestHavocPantry>();
+
+            if (pantry != null)
+            {
+                // Try to allocate an unoccupied slot on this pantry level
+                if (!pantry.TryScorePiece(piece, out Vector3 targetPos, out Quaternion targetRot))
+                {
+                    // Level is already full (5 pieces). Do not add any more to this level!
+                    return;
+                }
+
+                // Snap into designated spot on the shelf
+                piece.transform.position = targetPos;
+                piece.transform.rotation = targetRot;
+            }
+
+            // Mark instance as scored so it cannot be scored again
+            _scoredPieces.Add(instanceId);
+
             // Apply points to the correct alliance score
             if (isBlue)
                 ScoreHolder.BlueScore += points;
             else
                 ScoreHolder.RedScore += points;
+
+            // Mark the piece as scored/stationary so it remains visible on the field
+            // and cannot be re-intaked by robots
+            piece.state = GamePieceState.Stationary;
+
+            // Ensure colliders are enabled so it sits physically on the surface
+            if (piece.colliderParent != null && !piece.colliderParent.activeSelf)
+            {
+                piece.colliderParent.SetActive(true);
+            }
+
+            // Lock physics securely as Kinematic so pieces do not fall out of the pantry shelf or oven
+            if (piece.rb != null)
+            {
+                piece.rb.isKinematic = true;
+                piece.rb.velocity = Vector3.zero;
+                piece.rb.angularVelocity = Vector3.zero;
+            }
 
             // If this is a carrot cake, spawn a fresh one at the depot
             if (isCake && carrotCakePrefab != null && cakeDepot != null)
@@ -61,13 +100,18 @@ namespace Util
                 Instantiate(carrotCakePrefab, cakeDepot.position, cakeDepot.rotation);
             }
 
-            // Remove the original piece from the field
-            Destroy(piece.gameObject);
+            // Note: Piece is intentionally kept on the field (not Destroyed)
+            // so it shows that the carrot or carrot cake is actually on the pantry or in the oven.
         }
 
-        private void LateUpdate()
+        private void OnDestroy()
         {
-            _scoredThisFrame.Clear();
+            _scoredPieces.Clear();
+        }
+
+        public static void ResetScoredPieces()
+        {
+            _scoredPieces.Clear();
         }
     }
 }
