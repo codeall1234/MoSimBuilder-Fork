@@ -8,6 +8,8 @@ namespace Field.SeasonSpecific
 {
     public class HarvestHavocOven : FieldScorer
     {
+        [SerializeField] private int carrotPoints = 2;
+        [SerializeField] private int carrotCakePoints = 2;
         [SerializeField] private GameObject carrotCakePrefab;
         [SerializeField] private Transform depotSpawnPoint;
 
@@ -29,8 +31,8 @@ namespace Field.SeasonSpecific
             boxScorer.isBlue = isBlue;
             boxScorer.cakeDepot = depotSpawnPoint;
             boxScorer.carrotCakePrefab = carrotCakePrefab;
-            boxScorer.carrotPoints = 5; // pantry/oven carrot points
-            boxScorer.carrotCakePoints = 8;
+            boxScorer.carrotPoints = carrotPoints;
+            boxScorer.carrotCakePoints = carrotCakePoints;
         }
 
         void FixedUpdate()
