@@ -40,11 +40,30 @@ namespace Util
         {
             // Find the GamePiece component on this collider or any parent
             var piece = Utils.FindParentObjectComponent<GamePiece>(other.gameObject);
-            if (piece == null || piece.owner != null || piece.state != GamePieceState.World) return;
+            if (piece == null) return;
+
+            // Never score rolling carrot cakes that were reintroduced down the ramp
+            if (piece.GetComponent<HarvestHavocOven.RollingCarrotCake>() != null) return;
 
             // Prevent double scoring
             int instanceId = piece.gameObject.GetInstanceID();
             if (_scoredPieces.Contains(instanceId)) return;
+
+            // If piece is held by a robot or intake node, detach it so it can be scored
+            if (piece.owner != null)
+            {
+                var buildNode = piece.owner.GetComponent<BuildNode>();
+                if (buildNode != null && buildNode.currentGamePiece == piece)
+                {
+                    buildNode.currentGamePiece = null;
+                }
+                piece.owner = null;
+                piece.state = GamePieceState.World;
+            }
+            else if (piece.state != GamePieceState.World)
+            {
+                return;
+            }
 
             // Determine points based on piece type
             int points = 0;
@@ -92,18 +111,26 @@ namespace Util
             // Check if this scorer is on an Oven
             var oven = GetComponent<HarvestHavocOven>();
             if (oven == null) oven = GetComponentInParent<HarvestHavocOven>();
+            if (oven == null)
+            {
+                var proxy = GetComponent<HarvestHavocOven.OvenTriggerProxy>();
+                if (proxy != null) oven = proxy.oven;
+            }
 
             if (oven != null)
             {
-                if (oven.TryScorePiece(piece, out targetPos, out targetRot))
+                if (!oven.TryScorePiece(piece, out targetPos, out targetRot))
                 {
-                    piece.transform.position = targetPos;
-                    piece.transform.rotation = targetRot;
-                    if (piece.rb != null)
-                    {
-                        piece.rb.position = targetPos;
-                        piece.rb.rotation = targetRot;
-                    }
+                    // Not a valid oven score (e.g. piece rolling down the big ramp on top of the oven)
+                    return;
+                }
+
+                piece.transform.position = targetPos;
+                piece.transform.rotation = targetRot;
+                if (piece.rb != null)
+                {
+                    piece.rb.position = targetPos;
+                    piece.rb.rotation = targetRot;
                 }
             }
 

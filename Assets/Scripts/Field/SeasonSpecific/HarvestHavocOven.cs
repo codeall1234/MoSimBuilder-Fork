@@ -7,6 +7,19 @@ using BuilderLib;
 
 namespace Field.SeasonSpecific
 {
+    /// <summary>
+    /// Implements Blair Bunnybots 2026: Harvest Havoc OVEN and RAMP mechanics.
+    /// 
+    /// Two distinct ramps exist on the Oven/Ramp structure:
+    /// 1. "Little Ramp": Inside the lower oven chute opening where carrots are placed/deposited.
+    ///    Carrots roll down this small ramp (sloping down towards the back alliance wall at ~10 degrees,
+    ///    surface height Y ~ 0.18m - 0.26m). Up to 3 carrots sit side-by-side on this ramp.
+    /// 
+    /// 2. "Big Ramp": Spanning the top of the entire oven structure (from Y ~ 1.25m down to field level).
+    ///    When 3 carrots are placed in the oven, they are swapped out. 3 carrots are recirculated to
+    ///    the opposing alliance depot, and 1 Carrot Cake is taken and rolled down this Big Ramp into the
+    ///    Neutral Zone / Field.
+    /// </summary>
     public class HarvestHavocOven : FieldScorer
     {
         [SerializeField] private int carrotPoints = 2;
@@ -14,15 +27,56 @@ namespace Field.SeasonSpecific
         [SerializeField] private GameObject carrotCakePrefab;
         [SerializeField] private Transform depotSpawnPoint;
 
-        private int scoredCount;
-        private int storedCarrots;
         private readonly List<GamePiece> _scoredOvenPieces = new List<GamePiece>();
         private bool _isBaking;
 
         private static readonly List<HarvestHavocOven> _allOvens = new List<HarvestHavocOven>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticData()
+        {
+            ResetAllOvens();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoDiscoverOvens()
+        {
+            EnsureAllOvens();
+        }
+
+        private static bool _ovensInitialized = false;
+
+        public static void EnsureAllOvens()
+        {
+            _allOvens.RemoveAll(o => o == null);
+            if (_allOvens.Count >= 2) return;
+            if (_ovensInitialized && _allOvens.Count > 0) return;
+
+            var redGo = GameObject.Find("mesh164_mesh") ?? GameObject.Find("RedOven");
+            if (redGo != null)
+            {
+                var comp = redGo.GetComponent<HarvestHavocOven>();
+                if (comp == null) comp = redGo.AddComponent<HarvestHavocOven>();
+                if (!_allOvens.Contains(comp)) _allOvens.Add(comp);
+            }
+
+            var blueGo = GameObject.Find("mesh90_mesh") ?? GameObject.Find("BlueOven");
+            if (blueGo != null)
+            {
+                var comp = blueGo.GetComponent<HarvestHavocOven>();
+                if (comp == null) comp = blueGo.AddComponent<HarvestHavocOven>();
+                if (!_allOvens.Contains(comp)) _allOvens.Add(comp);
+            }
+
+            if (_allOvens.Count > 0)
+            {
+                _ovensInitialized = true;
+            }
+        }
+
         public static void ResetAllOvens()
         {
+            _ovensInitialized = false;
             foreach (var oven in _allOvens)
             {
                 if (oven != null)
@@ -47,37 +101,43 @@ namespace Field.SeasonSpecific
         {
             get
             {
-                if (isBlue) return true;
-                Transform cur = transform;
-                while (cur != null)
+                // World X position is the definitive truth for the field:
+                // Red Alliance Farm is at negative X (X < 0)
+                // Blue Alliance Farm is at positive X (X > 0)
+                float worldX = transform.position.x;
+                var ren = GetComponent<Renderer>();
+                if (ren != null && Mathf.Abs(ren.bounds.center.x) > 0.1f)
                 {
-                    if (cur.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return true;
-                    if (cur.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
-                    cur = cur.parent;
+                    worldX = ren.bounds.center.x;
                 }
-                return GetOvenBounds().center.x > 0f;
+                else
+                {
+                    var mf = GetComponent<MeshFilter>();
+                    if (mf != null && mf.sharedMesh != null)
+                    {
+                        worldX = transform.TransformPoint(mf.sharedMesh.bounds.center).x;
+                    }
+                }
+                if (Mathf.Abs(worldX) > 0.1f)
+                {
+                    return worldX > 0f;
+                }
+                return isBlue;
             }
         }
 
+        private GameObject _triggerChild;
+
         void Start()
         {
-            // Initialize required FieldScorer variables
             scorePieces = new PieceNames[] { PieceNames.Carrot, PieceNames.CarrotCake };
-            scoreToAdd = 2;
-            autoScoreToAdd = 2;
+            scoreToAdd = carrotPoints;
+            autoScoreToAdd = carrotPoints;
 
             isBlue = IsBlueAlliance;
 
             EnsureDepot();
             EnsureTriggerCollider();
-
-            var boxScorer = gameObject.GetComponent<BoxScorer>();
-            if (boxScorer == null) boxScorer = gameObject.AddComponent<BoxScorer>();
-            boxScorer.isBlue = isBlue;
-            boxScorer.cakeDepot = depotSpawnPoint;
-            boxScorer.carrotCakePrefab = carrotCakePrefab;
-            boxScorer.carrotPoints = carrotPoints;
-            boxScorer.carrotCakePoints = carrotCakePoints;
         }
 
         private void EnsureDepot()
@@ -106,57 +166,48 @@ namespace Field.SeasonSpecific
 
         private void EnsureTriggerCollider()
         {
-            var box = GetComponent<BoxCollider>();
-            if (box == null) box = gameObject.AddComponent<BoxCollider>();
-            box.isTrigger = true;
-
-            // Disable any conflicting MeshCollider trigger
+            // Disable conflicting colliders on the mesh itself to prevent scale warnings
+            var existingBox = GetComponent<BoxCollider>();
+            if (existingBox != null) existingBox.enabled = false;
             var mc = GetComponent<MeshCollider>();
-            if (mc != null && mc.isTrigger)
+            if (mc != null && mc.isTrigger) mc.enabled = false;
+
+            bool blue = IsBlueAlliance;
+            string triggerName = blue ? "BlueOvenChuteTrigger" : "RedOvenChuteTrigger";
+            _triggerChild = GameObject.Find(triggerName);
+            if (_triggerChild == null)
             {
-                mc.enabled = false;
+                _triggerChild = new GameObject(triggerName);
             }
 
-            Bounds ovenBounds = GetOvenBounds();
-            Vector3 center = ovenBounds.center;
-            float wallDir = IsBlueAlliance ? 1f : -1f;
+            // Position trigger at the chute entrance under the big ramp:
+            // Red entrance: X = -7.30m, Y = 0.35m, Z = -1.739m
+            // Blue entrance: X = 7.30m, Y = 0.35m, Z = 1.739m
+            Vector3 worldCenter = blue 
+                ? new Vector3(7.30f, 0.35f, 1.739f)
+                : new Vector3(-7.30f, 0.35f, -1.739f);
 
-            // Oven entrance is on the field side of the oven (-wallDir * 0.15m from center)
-            // Chute opening trigger lowered to Y = 0.52m
-            Vector3 worldCenter = new Vector3(
-                center.x - wallDir * 0.15f,
-                0.52f,
-                center.z
-            );
-            Vector3 worldSize = new Vector3(0.85f, 0.75f, 0.75f);
+            _triggerChild.transform.position = worldCenter;
+            _triggerChild.transform.rotation = Quaternion.identity;
+            _triggerChild.transform.localScale = Vector3.one;
 
-            box.center = transform.InverseTransformPoint(worldCenter);
-            Vector3 localSize = transform.InverseTransformVector(worldSize);
-            box.size = new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z));
-        }
+            var box = _triggerChild.GetComponent<BoxCollider>();
+            if (box == null) box = _triggerChild.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.center = Vector3.zero;
+            box.size = new Vector3(0.70f, 0.50f, 0.70f);
 
-        public Bounds GetOvenBounds()
-        {
-            Transform ovenRoot = transform;
-            while (ovenRoot.parent != null && 
-                   !ovenRoot.parent.name.Contains("FieldHolder") && 
-                   !ovenRoot.parent.name.Contains("GameManager") && 
-                   !ovenRoot.parent.name.Contains("HarvestHavoc"))
-            {
-                ovenRoot = ovenRoot.parent;
-            }
+            var proxy = _triggerChild.GetComponent<OvenTriggerProxy>();
+            if (proxy == null) proxy = _triggerChild.AddComponent<OvenTriggerProxy>();
+            proxy.oven = this;
 
-            var renderers = ovenRoot.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length > 0)
-            {
-                Bounds b = renderers[0].bounds;
-                for (int i = 1; i < renderers.Length; i++)
-                {
-                    b.Encapsulate(renderers[i].bounds);
-                }
-                return b;
-            }
-            return new Bounds(transform.position, new Vector3(0.6f, 0.4f, 0.6f));
+            var boxScorer = _triggerChild.GetComponent<BoxScorer>();
+            if (boxScorer == null) boxScorer = _triggerChild.AddComponent<BoxScorer>();
+            boxScorer.isBlue = blue;
+            boxScorer.cakeDepot = depotSpawnPoint;
+            boxScorer.carrotCakePrefab = carrotCakePrefab;
+            boxScorer.carrotPoints = carrotPoints;
+            boxScorer.carrotCakePoints = carrotCakePoints;
         }
 
         public void IgnoreOvenCollisions(GamePiece piece)
@@ -184,49 +235,68 @@ namespace Field.SeasonSpecific
             }
         }
 
+        /// <summary>
+        /// Attempts to score a piece into the Oven.
+        /// Carrots are placed on the LITTLE RAMP inside the oven chute opening.
+        /// Pieces rolling down the Big Ramp on top (Y > 0.50m) are NOT scored!
+        /// </summary>
         public bool TryScorePiece(GamePiece piece, out Vector3 targetPos, out Quaternion targetRot)
         {
-            float wallDir = IsBlueAlliance ? 1f : -1f;
-            float yaw = IsBlueAlliance ? 90f : -90f;
-            // The oven chute is slanted upward towards the alliance wall at 15 degrees
-            targetRot = Quaternion.Euler(-15f, yaw, 0f);
+            // If the piece is above Y = 0.50m, it is rolling down the big ramp on top of the oven.
+            // It MUST NOT be scored into the lower oven chute!
+            if (piece.transform.position.y > 0.50f)
+            {
+                targetPos = Vector3.zero;
+                targetRot = Quaternion.identity;
+                return false;
+            }
 
-            // Ignore collisions with solid parts of the oven so piece enters freely
+            bool blue = IsBlueAlliance;
+
+            // Carrot cylinder axis lies along Z (across chute width)
+            // Roll tilted 10.0 degrees to match little ramp downward slope
+            targetRot = Quaternion.Euler(0f, 0f, blue ? -10.0f : 10.0f);
+
+            // Ignore collisions with solid chute walls so carrot sits quietly on the ramp
             IgnoreOvenCollisions(piece);
 
-            Bounds ovenBounds = GetOvenBounds();
-            Vector3 center = ovenBounds.center;
-
-            // Position carrots on the 15-degree ramp inside the oven (lowered by ~1 foot to 0.425m)
-            float depthX = center.x + wallDir * 0.20f;
-            float floorY = 0.425f;
+            // Calculated rest positions on the 10-degree sloped Little Ramp inside the chute:
+            // Slot 0 (deepest against back): |X| = 8.05m, Y = 0.177m
+            // Slot 1 (middle):               |X| = 7.82m, Y = 0.217m
+            // Slot 2 (front near entrance):  |X| = 7.59m, Y = 0.258m
+            float[] redXOffsets = { -8.05f, -7.82f, -7.59f };
+            float[] blueXOffsets = { 8.05f, 7.82f, 7.59f };
+            float[] yHeights = { 0.177f, 0.217f, 0.258f };
+            float chuteZ = blue ? 1.739f : -1.739f;
 
             if (piece.pieceType == PieceNames.CarrotCake)
             {
-                // Carrot cake placed into the oven: recirculate immediately
-                targetPos = new Vector3(depthX, floorY, center.z);
+                float cakeX = blue ? 7.82f : -7.82f;
+                targetPos = new Vector3(cakeX, 0.217f, chuteZ);
                 StartCoroutine(RecirculateCake(piece));
                 return true;
             }
 
-            // Remove any destroyed or null pieces from previous batches
+            // Clean destroyed pieces
             _scoredOvenPieces.RemoveAll(p => p == null);
 
-            // If already in oven, return existing assigned position
+            // If already scored in this oven, return existing position
             if (_scoredOvenPieces.Contains(piece))
             {
-                int existingIdx = _scoredOvenPieces.IndexOf(piece);
-                float existingOffset = (existingIdx - 1) * 0.10f;
-                targetPos = new Vector3(depthX, floorY, center.z + existingOffset);
+                int existingIdx = Mathf.Clamp(_scoredOvenPieces.IndexOf(piece), 0, 2);
+                float existX = blue ? blueXOffsets[existingIdx] : redXOffsets[existingIdx];
+                float existY = yHeights[existingIdx];
+                targetPos = new Vector3(existX, existY, chuteZ);
                 return true;
             }
 
             _scoredOvenPieces.Add(piece);
             int count = _scoredOvenPieces.Count;
 
-            // Arrange carrots neatly side by side along the oven width axis (Z)
-            float offset = (count - 2) * 0.10f;
-            targetPos = new Vector3(depthX, floorY, center.z + offset);
+            int slotIdx = Mathf.Clamp(count - 1, 0, 2);
+            float targetX = blue ? blueXOffsets[slotIdx] : redXOffsets[slotIdx];
+            float targetY = yHeights[slotIdx];
+            targetPos = new Vector3(targetX, targetY, chuteZ);
 
             if (count >= 3 && !_isBaking)
             {
@@ -243,10 +313,18 @@ namespace Field.SeasonSpecific
             {
                 Destroy(cake.gameObject);
             }
-            // Carrot Cake scored into oven is reintroduced down the alliance's ramp into the Neutral Zone
+            // Reintroduce down the alliance's BIG RAMP into the Neutral Zone
             RollCakeDownRamp();
         }
 
+        /// <summary>
+        /// Recirculation logic per official manual page 21:
+        /// When 3 carrots are placed into the oven, they are swapped out:
+        /// 1. The 3 carrots are destroyed from the oven chute.
+        /// 2. 3 carrots are added to the OPPOSING ALLIANCE'S DEPOT inventory.
+        /// 3. 1 Carrot Cake is taken from the opposing depot stock.
+        /// 4. The Carrot Cake is rolled down THIS ALLIANCE'S BIG RAMP into the Neutral Zone!
+        /// </summary>
         private IEnumerator BakeCarrots()
         {
             _isBaking = true;
@@ -265,30 +343,32 @@ namespace Field.SeasonSpecific
             }
             _scoredOvenPieces.RemoveRange(0, toDestroy);
 
-            // Recirculation per manual page 21:
-            // Human Player exchanges 3 oven-scored carrots for 1 Carrot Cake stored at the OPPOSING ALLIANCE'S DEPOT
+            // Carrots recirculate to opposing depot inventory
             bool opposingIsBlue = !IsBlueAlliance;
             HarvestHavocDepot.AddRecirculatedCarrots(opposingIsBlue, 3);
 
-            // Try to trade for 1 Carrot Cake from the opposing depot's stock of 9 cakes
+            // Trade for 1 Carrot Cake from opposing depot reserve (starts with 9 cakes)
             bool cakeAvailable = HarvestHavocDepot.TryTradeCarrotCake(opposingIsBlue);
 
             if (cakeAvailable)
             {
-                // Roll the received Carrot Cake down THIS ALLIANCE'S RAMP into the Neutral Zone!
+                // Roll the received Carrot Cake down THIS ALLIANCE'S BIG RAMP on top of the oven
                 RollCakeDownRamp();
             }
             else
             {
-                Debug.Log($"[HarvestHavocOven] {(IsBlueAlliance ? "Blue" : "Red")} Alliance 3 carrots handed over for free - opposing depot has no cakes left!");
+                Debug.Log($"[HarvestHavocOven] {(IsBlueAlliance ? "Blue" : "Red")} Alliance 3 carrots handed over - opposing depot has no cakes left!");
             }
 
             _isBaking = false;
         }
 
         /// <summary>
-        /// Rolls a Carrot Cake down this alliance's Ramp into the Neutral Zone,
+        /// Rolls a Carrot Cake down this alliance's BIG RAMP (on top of the oven) into the Neutral Zone,
         /// satisfying official manual rules G23 & G24.
+        /// 
+        /// Spawns at the very beginning of the ramp near the alliance wall and rolls physically
+        /// ON TOP OF the ramp into the field.
         /// </summary>
         public void RollCakeDownRamp()
         {
@@ -302,24 +382,24 @@ namespace Field.SeasonSpecific
                 return;
             }
 
-            Bounds ovenBounds = GetOvenBounds();
-            Vector3 center = ovenBounds.center;
-            float wallDir = IsBlueAlliance ? 1f : -1f;
+            bool blue = IsBlueAlliance;
 
-            // The ramp is on top of the oven structure.
-            // Top entrance of the ramp is on the alliance wall side (+wallDir * 0.40m from center)
-            // Height at top of ramp is Y ~ 1.15m.
-            Vector3 rampTopPos = new Vector3(
-                center.x + wallDir * 0.40f,
-                1.15f,
-                center.z
-            );
+            // Spawns at the top of the Big Ramp near the alliance wall:
+            // Red: X = -8.20m, Y = 1.32m, Z = -1.739m
+            // Blue: X = 8.20m, Y = 1.32m, Z = 1.739m
+            Vector3 rampTopPos = blue
+                ? new Vector3(8.20f, 1.32f, 1.739f)
+                : new Vector3(-8.20f, 1.32f, -1.739f);
 
-            // Roll direction: downwards and towards the field center / neutral zone (-wallDir)
-            Vector3 rollDir = new Vector3(-wallDir, -0.27f, 0f).normalized;
+            // Roll direction: downwards and towards the field center / neutral zone
+            // Red (at -X) rolls towards +X; Blue (at +X) rolls towards -X
+            Vector3 rollDir = blue
+                ? new Vector3(-1f, -0.27f, 0f).normalized
+                : new Vector3(1f, -0.27f, 0f).normalized;
 
-            // Orient the carrot cake horizontally across the ramp width (cylinder axis along Z)
-            Quaternion rampRot = Quaternion.Euler(-15f, IsBlueAlliance ? -90f : 90f, 0f);
+            Quaternion rampRot = blue
+                ? Quaternion.Euler(0f, 0f, 15.2f)
+                : Quaternion.Euler(0f, 0f, -15.2f);
 
             GameObject cakeObj = Instantiate(carrotCakePrefab, rampTopPos, rampRot);
             var piece = cakeObj.GetComponent<GamePiece>();
@@ -328,18 +408,45 @@ namespace Field.SeasonSpecific
                 piece.state = GamePieceState.World;
             }
 
-            // Ignore collisions with oven solid colliders so cake rolls smoothly down the ramp
-            IgnoreOvenCollisions(piece);
+            // Mark as rolling so BoxScorer will NEVER score this cake
+            cakeObj.AddComponent<RollingCarrotCake>();
 
             // Apply forward & downward rolling velocity down the ramp towards the neutral zone
             var rb = cakeObj.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.velocity = rollDir * 2.2f;
-                rb.angularVelocity = new Vector3(0f, 0f, wallDir * 6f);
+                rb.isKinematic = false;
+                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                rb.velocity = rollDir * 2.5f;
+                rb.angularVelocity = new Vector3(0f, 0f, (blue ? 1f : -1f) * 6f);
             }
 
-            Debug.Log($"[HarvestHavocOven] {(IsBlueAlliance ? "Blue" : "Red")} Alliance rolled Carrot Cake down Ramp into Neutral Zone!");
+            Debug.Log($"[HarvestHavocOven] {(blue ? "Blue" : "Red")} Alliance rolled Carrot Cake down Big Ramp into Neutral Zone!");
+        }
+
+        public class OvenTriggerProxy : MonoBehaviour
+        {
+            public HarvestHavocOven oven;
+        }
+
+        public class RollingCarrotCake : MonoBehaviour
+        {
+            private float _spawnTime;
+
+            void Awake()
+            {
+                _spawnTime = Time.time;
+            }
+
+            void Update()
+            {
+                // After 8 seconds, the cake has arrived in the Neutral Zone
+                if (Time.time > _spawnTime + 8f)
+                {
+                    Destroy(this);
+                }
+            }
         }
 
         private void OnDestroy()
@@ -350,7 +457,7 @@ namespace Field.SeasonSpecific
 
         void FixedUpdate()
         {
-            // Scoring is handled when pieces enter. Baking is managed via coroutines.
+            // Scoring handled upon entry. Baking handled via coroutines.
         }
     }
 }

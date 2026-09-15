@@ -157,6 +157,25 @@ public class LoadMatch : MonoBehaviour
     
     public void ResetField()
     {
+        // 1. Destroy all loose or spawned GamePiece objects in the scene so old carrots/cakes are removed
+        var existingPieces = FindObjectsOfType<GamePiece>();
+        foreach (var p in existingPieces)
+        {
+            if (p != null)
+            {
+                DestroyImmediate(p.gameObject);
+            }
+        }
+
+        // 2. Reset scores and game element states
+        ScoreHolder.BlueScore = 0;
+        ScoreHolder.RedScore = 0;
+        Util.BoxScorer.ResetScoredPieces();
+        Field.SeasonSpecific.HarvestHavocPantry.ResetAllSlots();
+        Field.SeasonSpecific.HarvestHavocDepot.ResetAllDepots();
+        Field.SeasonSpecific.HarvestHavocOven.ResetAllOvens();
+
+        // 3. Rebuild field and spawn robot
         DestroyField();
         LoadField();
         SpawnRobot();

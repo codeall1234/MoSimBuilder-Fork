@@ -20,6 +20,9 @@ public class ScoreHolder : MonoBehaviour
         Field.SeasonSpecific.HarvestHavocPantry.ResetAllSlots();
         Field.SeasonSpecific.HarvestHavocDepot.ResetAllDepots();
         Field.SeasonSpecific.HarvestHavocOven.ResetAllOvens();
+        Field.SeasonSpecific.HarvestHavocDepot.EnsureAllDepots();
+        Field.SeasonSpecific.HarvestHavocOven.EnsureAllOvens();
+        Field.SeasonSpecific.HarvestHavocPantry.EnsureAllPantries();
 
         var dispB = GameObject.Find("BlueScoreDisplay");
         if (dispB != null)
@@ -37,6 +40,10 @@ public class ScoreHolder : MonoBehaviour
     void Update()
     {
         blueScore = BlueScore;
+
+        Field.SeasonSpecific.HarvestHavocDepot.EnsureAllDepots();
+        Field.SeasonSpecific.HarvestHavocOven.EnsureAllOvens();
+        Field.SeasonSpecific.HarvestHavocPantry.EnsureAllPantries();
 
         if (blueScoreDisplay != null)
         {
