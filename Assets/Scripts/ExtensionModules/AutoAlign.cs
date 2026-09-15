@@ -147,6 +147,11 @@ public class AutoAlign : MonoBehaviour
             _swerveController = GetComponent<SwerveController>();
         }
 
+        if (targetNodes == null || targetNodes.Count == 0)
+        {
+            return;
+        }
+
         switch (alginType)
         {
             case AutoAlginType.button:
@@ -177,6 +182,7 @@ public class AutoAlign : MonoBehaviour
 
     private void Align(bool disruptable = false)
     {
+        if (targetNodes == null || targetNodes.Count == 0) return;
         Vector2 vector = vectorToClosestNode();
             
         float velocity = _dPIDController.UpdateLinear(Time.fixedDeltaTime, vector.magnitude, 0);
@@ -189,6 +195,7 @@ public class AutoAlign : MonoBehaviour
 
     private float distanceToClosestNode()
     {
+        if (targetNodes == null || targetNodes.Count == 0) return float.MaxValue;
         Vector2 localizedVector = closestNode().GetPosition() - getRelativeAlignPosition();
         float distance = localizedVector.magnitude;
         return distance;
@@ -203,6 +210,7 @@ public class AutoAlign : MonoBehaviour
 
     private Vector2 vectorToClosestNode()
     {
+        if (targetNodes == null || targetNodes.Count == 0) return Vector2.zero;
         Vector2 localizedVector = getRelativeAlignPosition() - closestNode().GetPosition();
         return localizedVector;
     }
@@ -220,6 +228,7 @@ public class AutoAlign : MonoBehaviour
 
     private Pose2d closestNode()
     {
+        if (targetNodes == null || targetNodes.Count == 0) return default(Pose2d);
         Pose2d closestNode = targetNodes[0];
         float distance = distanceToNode(closestNode);
         

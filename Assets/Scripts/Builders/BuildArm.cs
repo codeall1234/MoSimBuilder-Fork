@@ -70,6 +70,7 @@ public class BuildArm : BuildMechanism
             GenRB();
             GenJoint();
             GenController();
+            GenWristRotator();
         }
     }
 
@@ -116,7 +117,7 @@ public class BuildArm : BuildMechanism
         }
         else
         {
-            var targetAxis = Vector3.right;
+            var targetAxis = GetDriveAxis();
 
             Quaternion deltaRotation = transform.localRotation;
         
@@ -396,10 +397,23 @@ public class BuildArm : BuildMechanism
         
         _controller.iSat = 0;
         _controller.isAngularJoint = true;
-        _controller.driveAxis = new Vector3(1, 0, 0);
+        _controller.driveAxis = GetDriveAxis();
         _controller.joint = _joint;
         _controller.useNoWrap = useNoWrapPoint;
         _controller.noWrapAngle = noWrapAngle;
+    }
+
+    private void GenWristRotator()
+    {
+        if (GetComponent<ClawWristRotator>() == null)
+        {
+            gameObject.AddComponent<ClawWristRotator>();
+        }
+    }
+
+    private Vector3 GetDriveAxis()
+    {
+        return new Vector3(1, 0, 0);
     }
 
     private void GenJoint()
@@ -409,6 +423,7 @@ public class BuildArm : BuildMechanism
         _connectedBody = Utils.FindParentRB(gameObject);
 
         _joint.connectedBody = _connectedBody.GetComponent<Rigidbody>();
+        _joint.axis = GetDriveAxis();
         _joint.xMotion = ConfigurableJointMotion.Locked;
         _joint.yMotion = ConfigurableJointMotion.Locked;
         _joint.zMotion = ConfigurableJointMotion.Locked;

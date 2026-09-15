@@ -15,15 +15,44 @@ namespace BuilderLib
             }
         }
 
-        public static IEnumerator enableColliders(GamePiece piece)
+        public static IEnumerator enableColliders(GamePiece piece, Transform robotRoot = null)
         {
-            if (piece.colliderParent.activeSelf)
+            if (piece == null) yield break;
+
+            if (piece.colliderParent != null && piece.colliderParent.activeSelf)
             {
                 yield return null;
             }
             yield return new WaitForSeconds(0.05f);
         
-            piece.colliderParent.SetActive(true);
+            if (piece != null && piece.colliderParent != null)
+            {
+                piece.colliderParent.SetActive(true);
+            }
+
+            if (robotRoot != null)
+            {
+                yield return new WaitForSeconds(1.5f);
+                // Only re-enable collisions if piece is still dynamically in the world and has cleared the robot
+                if (piece != null && robotRoot != null && piece.state == GamePieceState.World)
+                {
+                    float dist = Vector3.Distance(piece.transform.position, robotRoot.position);
+                    if (dist > 1.2f)
+                    {
+                        var robotColliders = robotRoot.GetComponentsInChildren<Collider>(true);
+                        var pieceColliders = piece.GetComponentsInChildren<Collider>(true);
+                        foreach (var pCol in pieceColliders)
+                        {
+                            if (pCol == null || pCol.isTrigger) continue;
+                            foreach (var rCol in robotColliders)
+                            {
+                                if (rCol == null || rCol.isTrigger) continue;
+                                Physics.IgnoreCollision(pCol, rCol, false);
+                            }
+                        }
+                    }
+                }
+            }
         }
         public static bool AnimateTo(GamePiece piece, NodeAction action, Transform t = null)
         {
@@ -113,6 +142,24 @@ namespace BuilderLib
             if (!piece) return false;
             if (!piece.owner) return false;
             if (!action.IsValidPiece(piece.pieceType)) return false;
+
+            // Ignore collisions between piece colliders and all robot colliders during release
+            Transform robotRoot = piece.owner != null ? piece.owner.root : null;
+            if (robotRoot != null)
+            {
+                var robotColliders = robotRoot.GetComponentsInChildren<Collider>(true);
+                var pieceColliders = piece.GetComponentsInChildren<Collider>(true);
+                foreach (var pCol in pieceColliders)
+                {
+                    if (pCol == null || pCol.isTrigger) continue;
+                    foreach (var rCol in robotColliders)
+                    {
+                        if (rCol == null || rCol.isTrigger) continue;
+                        Physics.IgnoreCollision(pCol, rCol, true);
+                    }
+                }
+            }
+
             var speed = action.overideSpeed * 0.0254f ?? action.Speed * 0.0254f;
             action.overideSpeed = null;
             var rb = piece.rb;

@@ -25,9 +25,19 @@ public class GamePiece: MonoBehaviour
     {
         if (hasId) return;
         if (!rb) rb = GetComponent<Rigidbody>();
-        var core = Utils.FindParentObjectComponent<LoadMatch>(gameObject);
-        var returnTo = core.getFieldHolder().transform.GetChild(0);
-        originalParent = returnTo;
+        if (originalParent == null)
+        {
+            var core = Utils.FindParentObjectComponent<LoadMatch>(gameObject);
+            if (core == null) core = FindObjectOfType<LoadMatch>();
+            if (core != null && core.getFieldHolder() != null && core.getFieldHolder().transform.childCount > 0)
+            {
+                originalParent = core.getFieldHolder().transform.GetChild(0);
+            }
+            else
+            {
+                originalParent = transform.parent;
+            }
+        }
         hasId = true;
     }
 }

@@ -5344,7 +5344,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 774178452246953744}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 831deb66c5f8bcc4ca38c82ffcf15903, type: 3}
   m_Name: 
@@ -20453,7 +20453,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2938397267566948715}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.707107, y: -0, z: -0, w: 0.7071067}
+  m_LocalRotation: {x: -0.707107, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0.188, y: 0, z: 0.509}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -20485,7 +20485,7 @@ MonoBehaviour:
     Speed: 10
     AngularSpeed: 0
     MoveTo: {fileID: 0}
-    Direction: 2
+    Direction: 0
     Spin: {x: 0, y: 0, z: 0}
     OuttakeRotationOffset: {x: 0, y: 0, z: 0}
     DelayTimer: 0.05
@@ -37395,18 +37395,18 @@ MonoBehaviour:
     units: 0
     controllerButton: 8
     keyboardButton: 29
-  - setpointName: L1
-    controlType: 2
+  - setpointName: Oven
+    controlType: 3
     sequenceType: 0
-    sequenceTo: 
+    sequenceTo: Score
     delay: 0
     persist: 0
-    point: -25
+    point: -325
     shouldScaleToUnits: 0
     units: 0
     controllerButton: 0
     keyboardButton: 24
-  - setpointName: L2
+  - setpointName: L1
     controlType: 3
     sequenceType: 0
     sequenceTo: Score
@@ -37417,7 +37417,7 @@ MonoBehaviour:
     units: 0
     controllerButton: 1
     keyboardButton: 16
-  - setpointName: L3
+  - setpointName: L2
     controlType: 3
     sequenceType: 0
     sequenceTo: Score
@@ -37428,13 +37428,13 @@ MonoBehaviour:
     units: 0
     controllerButton: 2
     keyboardButton: 20
-  - setpointName: l4
+  - setpointName: L3
     controlType: 3
     sequenceType: 0
     sequenceTo: Score
-    delay: 0.35
+    delay: 0
     persist: 0
-    point: -325
+    point: -315
     shouldScaleToUnits: 0
     units: 0
     controllerButton: 3
@@ -63004,7 +63004,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8654260981008172726}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.707107, y: -0, z: -0, w: 0.7071067}
+  m_LocalRotation: {x: -0.707107, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0.188, y: 0, z: 0.509}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -63035,7 +63035,7 @@ MonoBehaviour:
     Speed: 10
     AngularSpeed: 0
     MoveTo: {fileID: 0}
-    Direction: 2
+    Direction: 0
     Spin: {x: 0, y: 0, z: 0}
     OuttakeRotationOffset: {x: 0, y: 0, z: 0}
     DelayTimer: 0
@@ -63434,46 +63434,46 @@ MonoBehaviour:
     units: 0
     controllerButton: 8
     keyboardButton: 29
-  - setpointName: L1
-    controlType: 2
+  - setpointName: Oven
+    controlType: 3
     sequenceType: 0
     sequenceTo: Score
     delay: 0
     persist: 0
-    point: 23
+    point: 0
     shouldScaleToUnits: 1
     units: 0
     controllerButton: 0
     keyboardButton: 24
+  - setpointName: L1
+    controlType: 3
+    sequenceType: 0
+    sequenceTo: Score
+    delay: 0
+    persist: 0
+    point: 14
+    shouldScaleToUnits: 1
+    units: 0
+    controllerButton: 1
+    keyboardButton: 16
   - setpointName: L2
     controlType: 3
     sequenceType: 0
     sequenceTo: Score
     delay: 0
     persist: 0
-    point: 18
+    point: 28
     shouldScaleToUnits: 1
     units: 0
-    controllerButton: 1
-    keyboardButton: 16
+    controllerButton: 2
+    keyboardButton: 20
   - setpointName: L3
     controlType: 3
     sequenceType: 0
     sequenceTo: Score
     delay: 0
     persist: 0
-    point: 34
-    shouldScaleToUnits: 1
-    units: 0
-    controllerButton: 2
-    keyboardButton: 20
-  - setpointName: L4
-    controlType: 3
-    sequenceType: 0
-    sequenceTo: Score
-    delay: 0
-    persist: 0
-    point: 63
+    point: 42
     shouldScaleToUnits: 1
     units: 0
     controllerButton: 3

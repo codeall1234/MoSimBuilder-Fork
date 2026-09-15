@@ -22,11 +22,25 @@ namespace Util
 
         private static readonly HashSet<int> _scoredPieces = new HashSet<int>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticData()
+        {
+            _scoredPieces.Clear();
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (other.gameObject.layer == 7 || other.GetComponentInParent<GamePiece>() != null)
+            {
+                OnTriggerEnter(other);
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             // Find the GamePiece component on this collider or any parent
             var piece = Utils.FindParentObjectComponent<GamePiece>(other.gameObject);
-            if (piece == null || piece.state != GamePieceState.World) return;
+            if (piece == null || piece.owner != null || piece.state != GamePieceState.World) return;
 
             // Prevent double scoring
             int instanceId = piece.gameObject.GetInstanceID();
@@ -53,10 +67,13 @@ namespace Util
             var pantry = GetComponent<HarvestHavocPantry>();
             if (pantry == null) pantry = GetComponentInParent<HarvestHavocPantry>();
 
+            Vector3 targetPos;
+            Quaternion targetRot;
+
             if (pantry != null)
             {
                 // Try to allocate an unoccupied slot on this pantry level
-                if (!pantry.TryScorePiece(piece, out Vector3 targetPos, out Quaternion targetRot))
+                if (!pantry.TryScorePiece(piece, out targetPos, out targetRot))
                 {
                     // Level is already full (5 pieces). Do not add any more to this level!
                     return;
@@ -65,6 +82,29 @@ namespace Util
                 // Snap into designated spot on the shelf
                 piece.transform.position = targetPos;
                 piece.transform.rotation = targetRot;
+                if (piece.rb != null)
+                {
+                    piece.rb.position = targetPos;
+                    piece.rb.rotation = targetRot;
+                }
+            }
+
+            // Check if this scorer is on an Oven
+            var oven = GetComponent<HarvestHavocOven>();
+            if (oven == null) oven = GetComponentInParent<HarvestHavocOven>();
+
+            if (oven != null)
+            {
+                if (oven.TryScorePiece(piece, out targetPos, out targetRot))
+                {
+                    piece.transform.position = targetPos;
+                    piece.transform.rotation = targetRot;
+                    if (piece.rb != null)
+                    {
+                        piece.rb.position = targetPos;
+                        piece.rb.rotation = targetRot;
+                    }
+                }
             }
 
             // Mark instance as scored so it cannot be scored again
@@ -86,16 +126,35 @@ namespace Util
                 piece.colliderParent.SetActive(true);
             }
 
+            // Permanently ignore collisions between the scored piece and all robot colliders
+            // to completely eliminate PhysX kinematic depenetration impulses against the robot
+            var robots = FindObjectsOfType<SwerveController>();
+            var pieceColliders = piece.GetComponentsInChildren<Collider>(true);
+            foreach (var robot in robots)
+            {
+                if (robot == null) continue;
+                var robotColliders = robot.GetComponentsInChildren<Collider>(true);
+                foreach (var pCol in pieceColliders)
+                {
+                    if (pCol == null) continue;
+                    foreach (var rCol in robotColliders)
+                    {
+                        if (rCol == null) continue;
+                        Physics.IgnoreCollision(pCol, rCol, true);
+                    }
+                }
+            }
+
             // Lock physics securely as Kinematic so pieces do not fall out of the pantry shelf or oven
             if (piece.rb != null)
             {
-                piece.rb.isKinematic = true;
                 piece.rb.velocity = Vector3.zero;
                 piece.rb.angularVelocity = Vector3.zero;
+                piece.rb.isKinematic = true;
             }
 
-            // If this is a carrot cake, spawn a fresh one at the depot
-            if (isCake && carrotCakePrefab != null && cakeDepot != null)
+            // If this is a carrot cake and not handled by oven, spawn a fresh one at the depot
+            if (oven == null && isCake && carrotCakePrefab != null && cakeDepot != null)
             {
                 Instantiate(carrotCakePrefab, cakeDepot.position, cakeDepot.rotation);
             }

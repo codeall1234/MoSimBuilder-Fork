@@ -265,38 +265,6 @@ public class JointController : MonoBehaviour
                     break;
 
                 case ControlType.SequenceStart when buttonPressed:
-                    if (_nextSequencePoint == null && _activeSequenceName == null)
-                    {
-                        _sequenceInterrupted = false;
-                        _activeSequenceName = setPoint.setpointName;
-                        _activeSetpointName = setPoint.setpointName;
-
-                        switch (setPoint.sequenceType)
-                        {
-                            case SequenceType.delay:
-                                _sequenceTime = setPoint.delay;
-                                _isSequenceUsingDelay = true;
-                                break;
-                            case SequenceType.nextPress:
-                                _sequenceTime = 0;
-                                _isSequenceUsingDelay = false;
-                                break;
-                        }
-
-                        if (!setPoint.getPersist())
-                            _targetPosition = setPoint.getPoint();
-
-                        foreach (var t in setPoints)
-                        {
-                            if (t.setpointName != setPoint.sequenceTo) continue;
-                            _nextSequencePoint = t;
-                            return;
-                        }
-
-                        _nextSequencePoint = null;
-                        return;
-                    }
-
                     if (_activeSequenceName == setPoint.setpointName)
                     {
                         if (_nextSequencePoint != null &&
@@ -308,7 +276,36 @@ public class JointController : MonoBehaviour
                         return;
                     }
 
-                    break;
+                    _sequenceInterrupted = false;
+                    originalPositions.Clear();
+                    _isWaitingForToggle = false;
+                    _activeSequenceName = setPoint.setpointName;
+                    _activeSetpointName = setPoint.setpointName;
+
+                    switch (setPoint.sequenceType)
+                    {
+                        case SequenceType.delay:
+                            _sequenceTime = setPoint.delay;
+                            _isSequenceUsingDelay = true;
+                            break;
+                        case SequenceType.nextPress:
+                            _sequenceTime = 0;
+                            _isSequenceUsingDelay = false;
+                            break;
+                    }
+
+                    if (!setPoint.getPersist())
+                        _targetPosition = setPoint.getPoint();
+
+                    foreach (var t in setPoints)
+                    {
+                        if (t.setpointName != setPoint.sequenceTo) continue;
+                        _nextSequencePoint = t;
+                        return;
+                    }
+
+                    _nextSequencePoint = null;
+                    return;
 
                 case ControlType.Toggle:
                     if (buttonPressed)

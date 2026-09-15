@@ -242,7 +242,7 @@ public class BuildNode: MonoBehaviour
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece));
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
                                 }
                                 break;
                             case NodeControlType.Tap:
@@ -251,7 +251,7 @@ public class BuildNode: MonoBehaviour
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece));
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
                                 }
                                 break;
                             case NodeControlType.AlwaysPerform:
@@ -261,7 +261,7 @@ public class BuildNode: MonoBehaviour
                                     actionDone = true;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece));
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
                                 }
 
                                 break;

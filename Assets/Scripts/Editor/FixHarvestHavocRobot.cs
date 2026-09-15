@@ -50,6 +50,7 @@ public class FixHarvestHavocRobot
                         {
                             action.ControllerButton = ControllerInputs.RightTrigger;
                             action.Speed = 10f; // Reset launch speed to 10
+                            action.Direction = Direction.forward;
                             modified = true;
                         }
                         else if (action.Type == NodeType.Intake || action.Type == NodeType.Transfer)
@@ -60,13 +61,109 @@ public class FixHarvestHavocRobot
                     }
                 }
 
+                if (node.gameObject.name == "Stow" || node.gameObject.name == "l1Outake")
+                {
+                    node.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+                    modified = true;
+                }
+
                 if (modified)
                 {
                     EditorUtility.SetDirty(node);
                 }
             }
 
-            // 2. Fix JointController Setpoints
+            // 2. Fix BuildArm Setpoints (Level 1, 2, 3 set to -25 deg, Score to -40 deg, Oven to -35 deg)
+            BuildArm[] arms = root.GetComponentsInChildren<BuildArm>(true);
+            foreach (var arm in arms)
+            {
+                arm.transform.localRotation = Quaternion.Euler(0f, -90f, 90f);
+                EditorUtility.SetDirty(arm.transform);
+
+                SerializedObject so = new SerializedObject(arm);
+                SerializedProperty sps = so.FindProperty("setPoints");
+                if (sps != null)
+                {
+                    for (int i = 0; i < sps.arraySize; i++)
+                    {
+                        var elem = sps.GetArrayElementAtIndex(i);
+                        var nameProp = elem.FindPropertyRelative("setpointName");
+                        var pointProp = elem.FindPropertyRelative("point");
+                        var seqProp = elem.FindPropertyRelative("sequenceTo");
+                        if (nameProp != null && pointProp != null)
+                        {
+                            string sName = nameProp.stringValue.ToLower();
+                            if (sName.Contains("score"))
+                            {
+                                pointProp.floatValue = -40f;
+                            }
+                            else if (sName.Contains("l4") || sName.Contains("oven"))
+                            {
+                                pointProp.floatValue = -35f;
+                            }
+                            else if (sName.Contains("l1") || sName.Contains("l2") || sName.Contains("l3") || sName.Contains("level"))
+                            {
+                                pointProp.floatValue = -25f;
+                                if (sName.Contains("l1") && seqProp != null)
+                                {
+                                    seqProp.stringValue = "Score";
+                                }
+                            }
+                        }
+                    }
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(arm);
+                }
+            }
+
+            // Fix Buildelevator Setpoints (Oven/L4 lowered to 5 inches)
+            Buildelevator[] elevators = root.GetComponentsInChildren<Buildelevator>(true);
+            foreach (var elev in elevators)
+            {
+                SerializedObject so = new SerializedObject(elev);
+                SerializedProperty sps = so.FindProperty("setPoints");
+                if (sps != null)
+                {
+                    for (int i = 0; i < sps.arraySize; i++)
+                    {
+                        var elem = sps.GetArrayElementAtIndex(i);
+                        var nameProp = elem.FindPropertyRelative("setpointName");
+                        var pointProp = elem.FindPropertyRelative("point");
+                        if (nameProp != null && pointProp != null)
+                        {
+                            string sName = nameProp.stringValue.ToLower();
+                            if (sName.Contains("l4") || sName.Contains("oven"))
+                            {
+                                pointProp.floatValue = 0f;
+                            }
+                            else if (sName == "l1" || sName == "level 1")
+                            {
+                                pointProp.floatValue = 14f;
+                            }
+                            else if (sName == "l2" || sName == "level 2")
+                            {
+                                pointProp.floatValue = 28f;
+                            }
+                            else if (sName == "l3" || sName == "level 3")
+                            {
+                                pointProp.floatValue = 42f;
+                            }
+                        }
+                    }
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(elev);
+                }
+            }
+
+            // Disable AutoAlign on the robot since Harvest Havoc has no reef branches
+            AutoAlign autoAlign = root.GetComponentInChildren<AutoAlign>(true);
+            if (autoAlign != null && autoAlign.enabled)
+            {
+                autoAlign.enabled = false;
+                EditorUtility.SetDirty(autoAlign);
+            }
+
+            // 3. Fix JointController Setpoints
             JointController[] controllers = root.GetComponentsInChildren<JointController>(true);
             foreach (var jc in controllers)
             {
