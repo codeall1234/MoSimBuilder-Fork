@@ -138,14 +138,21 @@ namespace Field.SeasonSpecific
         private static void EnsureAlliancePantries(bool isBlueAlliance)
         {
             string prefix = isBlueAlliance ? "BluePantry" : "RedPantry";
-            float minX = isBlueAlliance ? 5.540f : -7.928f;
-            float maxX = isBlueAlliance ? 7.928f : -5.540f;
-            float centerX = (minX + maxX) * 0.5f;
-            float sizeX = maxX - minX;
+            float defaultMinX = isBlueAlliance ? 5.540f : -7.928f;
+            float defaultMaxX = isBlueAlliance ? 7.928f : -5.540f;
+            float centerX = (defaultMinX + defaultMaxX) * 0.5f;
+            float sizeX = defaultMaxX - defaultMinX;
 
             // Z: shelf back is -4.20m, front lip is -3.88m, center is -4.037m
             float centerZ = -3.95f;
             float sizeZ = 0.60f;
+
+            GameObject physicalPantry = GameObject.Find(prefix);
+            if (physicalPantry != null)
+            {
+                centerX = physicalPantry.transform.position.x;
+                centerZ = physicalPantry.transform.position.z - 3.95f;
+            }
 
             // 3 levels:
             // Level 1: surface Y = 0.830m, points: 3 / 8
@@ -243,13 +250,25 @@ namespace Field.SeasonSpecific
             else if (lvl == 2) shelfSurfaceY = 1.186f;
             else shelfSurfaceY = 1.541f;
 
+            string prefix = isBlueAlliance ? "BluePantry" : "RedPantry";
+            float defaultMinX = isBlueAlliance ? 5.540f : -7.928f;
+            float defaultMaxX = isBlueAlliance ? 7.928f : -5.540f;
+            float centerX = (defaultMinX + defaultMaxX) * 0.5f;
+            float span = defaultMaxX - defaultMinX;
             float shelfCenterZ = -4.037f;
+            
+            GameObject physicalPantry = GameObject.Find(prefix);
+            if (physicalPantry != null)
+            {
+                centerX = physicalPantry.transform.position.x;
+                shelfCenterZ = physicalPantry.transform.position.z - 4.037f;
+            }
+
             float carrotRadius = 0.038f;
 
             // X range for 5 slots
-            float minX = isBlueAlliance ? 5.540f : -7.928f;
-            float maxX = isBlueAlliance ? 7.928f : -5.540f;
-            float span = maxX - minX;
+            float minX = centerX - span * 0.5f;
+            float maxX = centerX + span * 0.5f;
 
             for (int i = 0; i < 5; i++)
             {

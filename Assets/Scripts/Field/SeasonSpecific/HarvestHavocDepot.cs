@@ -494,6 +494,7 @@ namespace Field.SeasonSpecific
             if (piece != null)
             {
                 piece.state = GamePieceState.World;
+                piece.originalParent = parentTransform;
             }
 
             // Ignore collisions with depot structure so carrot drops smoothly
@@ -558,15 +559,15 @@ namespace Field.SeasonSpecific
             if (robot.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return true;
             if (robot.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
 
-            // 2. FMS spawn check
+            // 2. FMS spawn check (Blue is at positive X > 0, Red is at negative X < 0)
             var fms = FindObjectOfType<FMS>();
             if (fms != null && fms.defaultSpawn != null)
             {
-                return fms.defaultSpawn.position.x < 0f;
+                return fms.defaultSpawn.position.x > 0f;
             }
 
             // 3. Check robot's current or starting X coordinate
-            return robot.transform.position.x < 0f;
+            return robot.transform.position.x > 0f;
         }
 
         public bool IsRobotOfOurAlliance(GameObject robot)

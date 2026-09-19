@@ -174,6 +174,7 @@ public class LoadMatch : MonoBehaviour
         Field.SeasonSpecific.HarvestHavocPantry.ResetAllSlots();
         Field.SeasonSpecific.HarvestHavocDepot.ResetAllDepots();
         Field.SeasonSpecific.HarvestHavocOven.ResetAllOvens();
+        Field.SeasonSpecific.HarvestHavocEndgame.ResetEndgame();
 
         // 3. Rebuild field and spawn robot
         DestroyField();

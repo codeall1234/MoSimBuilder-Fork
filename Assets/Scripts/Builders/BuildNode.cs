@@ -372,6 +372,8 @@ public class BuildNode: MonoBehaviour
             if (piece.owner) return false;
             currentGamePiece = piece;
             piece.state = GamePieceState.Stationary;
+            var rolling = piece.GetComponent<Field.SeasonSpecific.HarvestHavocOven.RollingCarrotCake>();
+            if (rolling != null) Destroy(rolling);
             if (!currentGamePiece) return false;
             currentGamePiece.startingDistance = DistanceToPiece(currentGamePiece);
             currentState = NodeState.Intakeing;

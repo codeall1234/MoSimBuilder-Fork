@@ -52,19 +52,21 @@ namespace Field.SeasonSpecific
             if (_allOvens.Count >= 2) return;
             if (_ovensInitialized && _allOvens.Count > 0) return;
 
-            var redGo = GameObject.Find("mesh164_mesh") ?? GameObject.Find("RedOven");
+            var redGo = GameObject.Find("RedOven") ?? GameObject.Find("mesh164_mesh");
             if (redGo != null)
             {
                 var comp = redGo.GetComponent<HarvestHavocOven>();
                 if (comp == null) comp = redGo.AddComponent<HarvestHavocOven>();
+                comp.isBlue = false;
                 if (!_allOvens.Contains(comp)) _allOvens.Add(comp);
             }
 
-            var blueGo = GameObject.Find("mesh90_mesh") ?? GameObject.Find("BlueOven");
+            var blueGo = GameObject.Find("BlueOven") ?? GameObject.Find("mesh90_mesh");
             if (blueGo != null)
             {
                 var comp = blueGo.GetComponent<HarvestHavocOven>();
                 if (comp == null) comp = blueGo.AddComponent<HarvestHavocOven>();
+                comp.isBlue = true;
                 if (!_allOvens.Contains(comp)) _allOvens.Add(comp);
             }
 
@@ -101,27 +103,25 @@ namespace Field.SeasonSpecific
         {
             get
             {
-                // World X position is the definitive truth for the field:
-                // Red Alliance Farm is at negative X (X < 0)
-                // Blue Alliance Farm is at positive X (X > 0)
-                float worldX = transform.position.x;
-                var ren = GetComponent<Renderer>();
-                if (ren != null && Mathf.Abs(ren.bounds.center.x) > 0.1f)
+                // 1. Explicit name check on this or parent
+                if (name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                if (name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+                if (transform.parent != null)
                 {
-                    worldX = ren.bounds.center.x;
+                    if (transform.parent.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                    if (transform.parent.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
                 }
-                else
+
+                // 2. Check world X position of child renderers
+                var renderers = GetComponentsInChildren<Renderer>();
+                foreach (var r in renderers)
                 {
-                    var mf = GetComponent<MeshFilter>();
-                    if (mf != null && mf.sharedMesh != null)
+                    if (r != null && Mathf.Abs(r.bounds.center.x) > 0.5f)
                     {
-                        worldX = transform.TransformPoint(mf.sharedMesh.bounds.center).x;
+                        return r.bounds.center.x > 0f;
                     }
                 }
-                if (Mathf.Abs(worldX) > 0.1f)
-                {
-                    return worldX > 0f;
-                }
+
                 return isBlue;
             }
         }
@@ -181,11 +181,12 @@ namespace Field.SeasonSpecific
             }
 
             // Position trigger at the chute entrance under the big ramp:
-            // Red entrance: X = -7.30m, Y = 0.35m, Z = -1.739m
+            // BOTH Red and Blue ovens are at Z = +1.739m!
+            // Red entrance: X = -7.30m, Y = 0.35m, Z = 1.739m
             // Blue entrance: X = 7.30m, Y = 0.35m, Z = 1.739m
             Vector3 worldCenter = blue 
                 ? new Vector3(7.30f, 0.35f, 1.739f)
-                : new Vector3(-7.30f, 0.35f, -1.739f);
+                : new Vector3(-7.30f, 0.35f, 1.739f);
 
             _triggerChild.transform.position = worldCenter;
             _triggerChild.transform.rotation = Quaternion.identity;
@@ -195,7 +196,7 @@ namespace Field.SeasonSpecific
             if (box == null) box = _triggerChild.AddComponent<BoxCollider>();
             box.isTrigger = true;
             box.center = Vector3.zero;
-            box.size = new Vector3(0.70f, 0.50f, 0.70f);
+            box.size = new Vector3(0.80f, 0.60f, 0.80f);
 
             var proxy = _triggerChild.GetComponent<OvenTriggerProxy>();
             if (proxy == null) proxy = _triggerChild.AddComponent<OvenTriggerProxy>();
@@ -213,16 +214,7 @@ namespace Field.SeasonSpecific
         public void IgnoreOvenCollisions(GamePiece piece)
         {
             if (piece == null) return;
-            Transform ovenRoot = transform;
-            while (ovenRoot.parent != null && 
-                   !ovenRoot.parent.name.Contains("FieldHolder") && 
-                   !ovenRoot.parent.name.Contains("GameManager") && 
-                   !ovenRoot.parent.name.Contains("HarvestHavoc"))
-            {
-                ovenRoot = ovenRoot.parent;
-            }
-
-            var ovenColliders = ovenRoot.GetComponentsInChildren<Collider>(true);
+            var ovenColliders = this.GetComponentsInChildren<Collider>(true);
             var pieceColliders = piece.GetComponentsInChildren<Collider>(true);
             foreach (var pCol in pieceColliders)
             {
@@ -267,7 +259,8 @@ namespace Field.SeasonSpecific
             float[] redXOffsets = { -8.05f, -7.82f, -7.59f };
             float[] blueXOffsets = { 8.05f, 7.82f, 7.59f };
             float[] yHeights = { 0.177f, 0.217f, 0.258f };
-            float chuteZ = blue ? 1.739f : -1.739f;
+            // BOTH alliances have their oven chute at Z = +1.739m!
+            float chuteZ = 1.739f;
 
             if (piece.pieceType == PieceNames.CarrotCake)
             {
@@ -385,11 +378,12 @@ namespace Field.SeasonSpecific
             bool blue = IsBlueAlliance;
 
             // Spawns at the top of the Big Ramp near the alliance wall:
-            // Red: X = -8.20m, Y = 1.32m, Z = -1.739m
+            // BOTH Red and Blue ramps are at Z = +1.739m!
+            // Red: X = -8.20m, Y = 1.32m, Z = 1.739m
             // Blue: X = 8.20m, Y = 1.32m, Z = 1.739m
             Vector3 rampTopPos = blue
                 ? new Vector3(8.20f, 1.32f, 1.739f)
-                : new Vector3(-8.20f, 1.32f, -1.739f);
+                : new Vector3(-8.20f, 1.32f, 1.739f);
 
             // Roll direction: downwards and towards the field center / neutral zone
             // Red (at -X) rolls towards +X; Blue (at +X) rolls towards -X
@@ -402,10 +396,19 @@ namespace Field.SeasonSpecific
                 : Quaternion.Euler(0f, 0f, -15.2f);
 
             GameObject cakeObj = Instantiate(carrotCakePrefab, rampTopPos, rampRot);
+            Transform fieldHolder = null;
+            LoadMatch lm = FindFirstObjectByType<LoadMatch>();
+            if (lm != null && lm.getFieldHolder() != null) fieldHolder = lm.getFieldHolder().transform;
+            if (fieldHolder != null)
+            {
+                cakeObj.transform.parent = fieldHolder;
+            }
+
             var piece = cakeObj.GetComponent<GamePiece>();
             if (piece != null)
             {
                 piece.state = GamePieceState.World;
+                piece.originalParent = fieldHolder;
             }
 
             // Mark as rolling so BoxScorer will NEVER score this cake

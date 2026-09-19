@@ -23,7 +23,6 @@ namespace BuilderLib
             {
                 yield return null;
             }
-            yield return new WaitForSeconds(0.05f);
         
             if (piece != null && piece.colliderParent != null)
             {

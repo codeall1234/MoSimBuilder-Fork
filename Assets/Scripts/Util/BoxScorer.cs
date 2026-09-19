@@ -40,30 +40,44 @@ namespace Util
         {
             // Find the GamePiece component on this collider or any parent
             var piece = Utils.FindParentObjectComponent<GamePiece>(other.gameObject);
+            
             if (piece == null) return;
 
+            bool isDebug = piece.gameObject.name.Contains("Carrot") || piece.gameObject.name.Contains("CarrotCake");
+
+            if (piece.owner != null)
+            {
+                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: owner != null ({piece.owner.name})");
+                return;
+            }
+            if (piece.state != GamePieceState.World)
+            {
+                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: state != World ({piece.state})");
+                return;
+            }
+
             // Never score rolling carrot cakes that were reintroduced down the ramp
-            if (piece.GetComponent<HarvestHavocOven.RollingCarrotCake>() != null) return;
+            if (piece.GetComponent<HarvestHavocOven.RollingCarrotCake>() != null)
+            {
+                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: has RollingCarrotCake");
+                return;
+            }
 
             // Prevent double scoring
             int instanceId = piece.gameObject.GetInstanceID();
-            if (_scoredPieces.Contains(instanceId)) return;
-
-            // If piece is held by a robot or intake node, detach it so it can be scored
-            if (piece.owner != null)
+            if (_scoredPieces.Contains(instanceId))
             {
-                var buildNode = piece.owner.GetComponent<BuildNode>();
-                if (buildNode != null && buildNode.currentGamePiece == piece)
-                {
-                    buildNode.currentGamePiece = null;
-                }
-                piece.owner = null;
-                piece.state = GamePieceState.World;
-            }
-            else if (piece.state != GamePieceState.World)
-            {
+                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: already in _scoredPieces");
                 return;
             }
+
+            // Mark piece as no longer interactable by robots
+            piece.owner = null;
+            Transform fieldHolder = null;
+            LoadMatch lm = FindFirstObjectByType<LoadMatch>();
+            if (lm != null && lm.getFieldHolder() != null) fieldHolder = lm.getFieldHolder().transform;
+            piece.transform.parent = piece.originalParent != null ? piece.originalParent : fieldHolder;
+            piece.state = GamePieceState.World;
 
             // Determine points based on piece type
             int points = 0;
@@ -86,14 +100,15 @@ namespace Util
             var pantry = GetComponent<HarvestHavocPantry>();
             if (pantry == null) pantry = GetComponentInParent<HarvestHavocPantry>();
 
-            Vector3 targetPos;
-            Quaternion targetRot;
+            Vector3 targetPos = piece.transform.position;
+            Quaternion targetRot = piece.transform.rotation;
 
             if (pantry != null)
             {
                 // Try to allocate an unoccupied slot on this pantry level
                 if (!pantry.TryScorePiece(piece, out targetPos, out targetRot))
                 {
+                    if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: Pantry level full");
                     // Level is already full (5 pieces). Do not add any more to this level!
                     return;
                 }
@@ -121,6 +136,7 @@ namespace Util
             {
                 if (!oven.TryScorePiece(piece, out targetPos, out targetRot))
                 {
+                    if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: Oven TryScorePiece failed (probably Y > 0.50)");
                     // Not a valid oven score (e.g. piece rolling down the big ramp on top of the oven)
                     return;
                 }
@@ -134,6 +150,7 @@ namespace Util
                 }
             }
 
+            if (isDebug) Debug.Log($"[BoxScorer] SCORED {piece.name}! Adding to _scoredPieces.");
             // Mark instance as scored so it cannot be scored again
             _scoredPieces.Add(instanceId);
 
@@ -151,6 +168,11 @@ namespace Util
             if (piece.colliderParent != null && !piece.colliderParent.activeSelf)
             {
                 piece.colliderParent.SetActive(true);
+            }
+            var childCols = piece.GetComponentsInChildren<Collider>(true);
+            foreach (var col in childCols)
+            {
+                if (col != null && !col.isTrigger) col.enabled = true;
             }
 
             // Permanently ignore collisions between the scored piece and all robot colliders
@@ -178,7 +200,11 @@ namespace Util
                 piece.rb.velocity = Vector3.zero;
                 piece.rb.angularVelocity = Vector3.zero;
                 piece.rb.isKinematic = true;
+                piece.rb.position = targetPos;
+                piece.rb.rotation = targetRot;
             }
+            piece.transform.position = targetPos;
+            piece.transform.rotation = targetRot;
 
             // If this is a carrot cake and not handled by oven, spawn a fresh one at the depot
             if (oven == null && isCake && carrotCakePrefab != null && cakeDepot != null)
