@@ -30,6 +30,7 @@ public class FieldScorer : MonoBehaviour
     {
         occupyObjects = new List<GamePiece>();
         scoredInAuto = 0;
+        if (occupyColliders == null) occupyColliders = new Collider[0];
         halfExtents = new Vector3[occupyColliders.Length];
         scorePiecesSet.Clear();
         
@@ -134,7 +135,7 @@ public class FieldScorer : MonoBehaviour
             var overlapBox = Physics.OverlapBox(coll.gameObject.transform.position, halfExtents[occupyColliders.IndexOfItem(coll)], coll.gameObject.transform.rotation, peiceMask);
             foreach (var box in overlapBox)
             {
-                var piece = Utils.FindParentObjectComponent<GamePiece>(box.gameObject); 
+                var piece = box.gameObject.GetComponentInParent<GamePiece>(); 
                 if (!piece) continue;
                 if (!scorePiecesSet.Contains(piece.pieceType)) continue;
                 if (uniquePieces.Contains(piece)) continue;

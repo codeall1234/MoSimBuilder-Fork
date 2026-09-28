@@ -159,6 +159,8 @@ public class JointController : MonoBehaviour
             return;
         }
 
+
+
         if (follower) return;
 
         if (_sequenceTime > 0)

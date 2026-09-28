@@ -197,16 +197,19 @@ namespace Field.SeasonSpecific
         {
             get
             {
-                if (isBlue) return true;
                 Transform cur = transform;
                 while (cur != null)
                 {
-                    if (cur.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return true;
-                    if (cur.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+                    if (cur.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+                    if (cur.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return true;
                     cur = cur.parent;
                 }
-                // Blue Farm is at positive X; Red Farm is at negative X
-                return transform.position.x > 0f;
+                
+                // Fallback 1: Swapped per user request
+                if (Mathf.Abs(transform.position.x) > 0.5f) return transform.position.x < 0f;
+                
+                // Fallback 2: serialized field
+                return isBlue;
             }
         }
 
@@ -246,19 +249,31 @@ namespace Field.SeasonSpecific
 
         private void EnsureTriggerCollider()
         {
+            // Remove any existing trigger colliders on the root object
             var colliders = GetComponents<BoxCollider>();
             foreach (var col in colliders)
             {
                 if (col.isTrigger)
                 {
-                    _triggerCollider = col;
-                    break;
+                    Destroy(col);
                 }
             }
 
+            string childName = "DepotTriggerZone";
+            Transform child = transform.Find(childName);
+            if (child == null)
+            {
+                GameObject childObj = new GameObject(childName);
+                childObj.transform.SetParent(transform, false);
+                // Reset scale to positive 1s to prevent BoxCollider negative scale warnings
+                childObj.transform.localScale = Vector3.one; 
+                child = childObj.transform;
+            }
+
+            _triggerCollider = child.GetComponent<BoxCollider>();
             if (_triggerCollider == null)
             {
-                _triggerCollider = gameObject.AddComponent<BoxCollider>();
+                _triggerCollider = child.gameObject.AddComponent<BoxCollider>();
                 _triggerCollider.isTrigger = true;
             }
 
@@ -266,10 +281,13 @@ namespace Field.SeasonSpecific
             Vector3 rollDir = GetRampExitDirection();
             // Small tight trigger box right at the mouth drop zone
             Vector3 dropZone = mouthPos + rollDir * 0.15f + Vector3.down * 0.15f;
-            _triggerCollider.center = transform.InverseTransformPoint(dropZone);
-            Vector3 triggerWorldSize = new Vector3(0.60f, 0.50f, 0.60f);
-            Vector3 localSize = transform.InverseTransformVector(triggerWorldSize);
-            _triggerCollider.size = new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z));
+            
+            // Set the child object's world position and rotation to match the world exactly, ignoring parent scale
+            child.position = dropZone;
+            child.rotation = Quaternion.identity;
+            
+            _triggerCollider.center = Vector3.zero;
+            _triggerCollider.size = new Vector3(0.60f, 0.50f, 0.60f);
         }
 
         /// <summary>
@@ -367,17 +385,64 @@ namespace Field.SeasonSpecific
             // Automatic proximity feeding from trigger
             if (_nearbyRobotColliders.Count > 0 && CanFeed())
             {
+                var checkedRobots = new HashSet<GameObject>();
                 foreach (var col in _nearbyRobotColliders)
                 {
                     if (col == null) continue;
                     var robotRoot = GetRobotRoot(col.gameObject);
-                    if (robotRoot != null && !RobotHasCarrot(robotRoot))
+                    if (robotRoot != null && checkedRobots.Add(robotRoot))
                     {
-                        DispenseCarrot();
-                        break;
+                        if (!RobotHasCarrotFast(robotRoot))
+                        {
+                            DispenseCarrot();
+                            break; // Dispense 1 at a time
+                        }
                     }
                 }
             }
+        }
+
+        private static bool RobotHasCarrotFast(GameObject robot)
+        {
+            if (robot == null) return false;
+
+            // 1. Any BuildNode on the robot holding a piece
+            var nodes = robot.GetComponentsInChildren<BuildNode>(true);
+            foreach (var node in nodes)
+            {
+                if (node != null && node.currentGamePiece != null) return true;
+            }
+
+            // 2. Any GamePiece child of robot
+            var childPieces = robot.GetComponentsInChildren<GamePiece>(true);
+            foreach (var p in childPieces)
+            {
+                if (p != null && p.state != GamePieceState.Stationary) return true;
+            }
+
+            // 3. Avoid FindObjectsOfType for performance by using the static registry.
+            Vector3 rPos = robot.transform.position;
+            foreach (var p in GamePiece.AllPieces)
+            {
+                if (p == null) continue;
+                
+                if (p.owner != null && p.owner.IsChildOf(robot.transform)) return true;
+
+                if (p.state != GamePieceState.Stationary)
+                {
+                    float dist2D = Vector2.Distance(
+                        new Vector2(p.transform.position.x, p.transform.position.z),
+                        new Vector2(rPos.x, rPos.z)
+                    );
+                    float yDiff = p.transform.position.y - rPos.y;
+                    if (dist2D <= 0.65f && yDiff >= -0.1f && yDiff <= 1.2f)
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
         }
 
         private void CheckChassisProximity()
@@ -410,7 +475,7 @@ namespace Field.SeasonSpecific
             if (!IsRobotOfOurAlliance(_cachedRobot.gameObject)) return;
 
             // If robot already has a carrot, DO NOT deposit another one!
-            if (RobotHasCarrot(_cachedRobot.gameObject)) return;
+            if (RobotHasCarrotFast(_cachedRobot.gameObject)) return;
 
             DispenseCarrot();
         }
@@ -437,7 +502,7 @@ namespace Field.SeasonSpecific
             // Manual F key requires robot to be in front of the mouth (<= 1.1m)
             if (distToMouth <= 1.1f && IsRobotOfOurAlliance(_cachedRobot.gameObject))
             {
-                if (RobotHasCarrot(_cachedRobot.gameObject))
+                if (RobotHasCarrotFast(_cachedRobot.gameObject))
                 {
                     Debug.Log($"[HarvestHavocDepot] Robot already has a carrot! Not dispensing.");
                     return;
@@ -505,8 +570,8 @@ namespace Field.SeasonSpecific
             if (rb != null)
             {
                 rb.isKinematic = false;
-                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                
+                
                 Vector3 launchVel = rollDir * 0.4f + Vector3.down * 1.0f;
                 rb.velocity = launchVel;
                 Vector3 rollAxis = Vector3.Cross(Vector3.up, rollDir);

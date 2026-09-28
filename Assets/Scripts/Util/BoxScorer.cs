@@ -36,23 +36,57 @@ namespace Util
             }
         }
 
+        private void FixedUpdate()
+        {
+            // Fallback: forcefully check bounds because Unity PhysX often misses OnTriggerStay for Kinematic -> Dynamic transitions
+            var box = GetComponent<BoxCollider>();
+            if (box == null) return;
+            
+            var cols = Physics.OverlapBox(transform.TransformPoint(box.center), box.size / 2f, transform.rotation);
+            foreach (var col in cols)
+            {
+                if (col.isTrigger) continue;
+                if (col.gameObject.layer == 7 || col.GetComponentInParent<GamePiece>() != null)
+                {
+                    OnTriggerEnter(col);
+                }
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
+            var rootName = other.transform.root != null ? other.transform.root.name : "NULL";
+
             // Find the GamePiece component on this collider or any parent
-            var piece = Utils.FindParentObjectComponent<GamePiece>(other.gameObject);
+            var piece = other.GetComponentInParent<GamePiece>();
             
-            if (piece == null) return;
+            if (piece == null)
+            {
+                // Only log if it's explicitly on Layer 7, otherwise it's just Robot spam
+                if (other.gameObject.layer == 7)
+                {
+                    
+                }
+                return;
+            }
+            
+            
+            
+            bool isDebug = true;
+            
+            
 
-            bool isDebug = piece.gameObject.name.Contains("Carrot") || piece.gameObject.name.Contains("CarrotCake");
-
+            // Prevent double scoring (TEMPORARILY DISABLED TO TEST IF IT'S THE CAUSE)
+            int instanceId = piece.gameObject.GetInstanceID();
+            
             if (piece.owner != null)
             {
-                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: owner != null ({piece.owner.name})");
+                
                 return;
             }
             if (piece.state != GamePieceState.World)
             {
-                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: state != World ({piece.state})");
+                
                 return;
             }
 
@@ -60,14 +94,6 @@ namespace Util
             if (piece.GetComponent<HarvestHavocOven.RollingCarrotCake>() != null)
             {
                 if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: has RollingCarrotCake");
-                return;
-            }
-
-            // Prevent double scoring
-            int instanceId = piece.gameObject.GetInstanceID();
-            if (_scoredPieces.Contains(instanceId))
-            {
-                if (isDebug) Debug.Log($"[BoxScorer] Rejected {piece.name}: already in _scoredPieces");
                 return;
             }
 
@@ -149,16 +175,22 @@ namespace Util
                     piece.rb.rotation = targetRot;
                 }
             }
-
+            
             if (isDebug) Debug.Log($"[BoxScorer] SCORED {piece.name}! Adding to _scoredPieces.");
             // Mark instance as scored so it cannot be scored again
             _scoredPieces.Add(instanceId);
 
             // Apply points to the correct alliance score
             if (isBlue)
+            {
                 ScoreHolder.BlueScore += points;
+                Debug.Log($"[BoxScorer] Awarded {points} points to BLUE! New Score: {ScoreHolder.BlueScore} | Piece: {piece.name}");
+            }
             else
+            {
                 ScoreHolder.RedScore += points;
+                Debug.Log($"[BoxScorer] Awarded {points} points to RED! New Score: {ScoreHolder.RedScore} | Piece: {piece.name}");
+            }
 
             // Mark the piece as scored/stationary so it remains visible on the field
             // and cannot be re-intaked by robots

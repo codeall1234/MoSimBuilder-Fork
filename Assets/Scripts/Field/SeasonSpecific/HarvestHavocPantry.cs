@@ -144,15 +144,9 @@ namespace Field.SeasonSpecific
             float sizeX = defaultMaxX - defaultMinX;
 
             // Z: shelf back is -4.20m, front lip is -3.88m, center is -4.037m
-            float centerZ = -3.95f;
+            // DO NOT use GameObject.Find(prefix).transform.position because the pivots of the visual models are at Z=0!
+            float centerZ = -4.037f + 0.087f; // -3.95f
             float sizeZ = 0.60f;
-
-            GameObject physicalPantry = GameObject.Find(prefix);
-            if (physicalPantry != null)
-            {
-                centerX = physicalPantry.transform.position.x;
-                centerZ = physicalPantry.transform.position.z - 3.95f;
-            }
 
             // 3 levels:
             // Level 1: surface Y = 0.830m, points: 3 / 8
@@ -255,14 +249,8 @@ namespace Field.SeasonSpecific
             float defaultMaxX = isBlueAlliance ? 7.928f : -5.540f;
             float centerX = (defaultMinX + defaultMaxX) * 0.5f;
             float span = defaultMaxX - defaultMinX;
+            // DO NOT use GameObject.Find(prefix).transform.position because the pivots of the visual models are at Z=0!
             float shelfCenterZ = -4.037f;
-            
-            GameObject physicalPantry = GameObject.Find(prefix);
-            if (physicalPantry != null)
-            {
-                centerX = physicalPantry.transform.position.x;
-                shelfCenterZ = physicalPantry.transform.position.z - 4.037f;
-            }
 
             float carrotRadius = 0.038f;
 

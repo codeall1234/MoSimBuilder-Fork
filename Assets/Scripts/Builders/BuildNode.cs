@@ -242,7 +242,9 @@ public class BuildNode: MonoBehaviour
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
+                                    var swerve = GetComponentInParent<SwerveController>();
+                                    Transform realRoot = swerve != null ? swerve.transform : transform.root;
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, realRoot));
                                 }
                                 break;
                             case NodeControlType.Tap:
@@ -251,7 +253,9 @@ public class BuildNode: MonoBehaviour
                                     if (!PerformTimerCheck(ref action, buttonPressed)) break;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
+                                    var swerve = GetComponentInParent<SwerveController>();
+                                    Transform realRoot = swerve != null ? swerve.transform : transform.root;
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, realRoot));
                                 }
                                 break;
                             case NodeControlType.AlwaysPerform:
@@ -261,7 +265,9 @@ public class BuildNode: MonoBehaviour
                                     actionDone = true;
                                     currentState = NodeState.Outaking;
                                     finished = GamePieceManager.ReleaseToWorld(currentGamePiece, action);
-                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, transform.root));
+                                    var swerve = GetComponentInParent<SwerveController>();
+                                    Transform realRoot = swerve != null ? swerve.transform : transform.root;
+                                    StartCoroutine(GamePieceManager.enableColliders(currentGamePiece, realRoot));
                                 }
 
                                 break;
@@ -423,7 +429,7 @@ public class BuildNode: MonoBehaviour
         foreach (Collider coll in colliders)
         {
             var objectThing = coll.gameObject;
-            var piece = Utils.FindParentObjectComponent<GamePiece>(objectThing);
+            var piece = objectThing.GetComponentInParent<GamePiece>();
             if (!piece) continue;
             if (!action.IsValidPiece(piece.pieceType) || piece.state != GamePieceState.World) continue;
             pieces.Add(piece);

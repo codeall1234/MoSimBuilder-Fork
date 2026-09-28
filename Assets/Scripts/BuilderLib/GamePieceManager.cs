@@ -19,14 +19,21 @@ namespace BuilderLib
         {
             if (piece == null) yield break;
 
+            
+
             if (piece.colliderParent != null && piece.colliderParent.activeSelf)
             {
+                
                 yield return null;
             }
         
             if (piece != null && piece.colliderParent != null)
             {
+                
                 piece.colliderParent.SetActive(true);
+                
+                var cols = piece.GetComponentsInChildren<Collider>();
+                
             }
 
             if (robotRoot != null)
@@ -75,14 +82,12 @@ namespace BuilderLib
         
             var distance = transform.parent.InverseTransformPoint(target.position) - piece.startPosition;
             var parentPosition = transform.parent.position;
-            Vector3 parentVelocity = Vector3.zero;
-            if (parentRb) parentVelocity = transform.parent.InverseTransformDirection(parentRb.velocity);
             
             // Calculate the step, but clamp it to not overshoot
             var distanceMagnitude = distance.magnitude;
             var maxStep = speed * Time.deltaTime;
             var stepMagnitude = Mathf.Min(maxStep, distanceMagnitude);
-            var step = (distance.normalized * stepMagnitude) + (parentVelocity * Time.smoothDeltaTime);
+            var step = distance.normalized * stepMagnitude;
             
             var finalPosition = piece.startPosition + step;
         
@@ -139,11 +144,23 @@ namespace BuilderLib
         public static bool ReleaseToWorld(GamePiece piece, NodeAction action)
         {
             if (!piece) return false;
+            
+            
+            
+            
+
             if (!piece.owner) return false;
             if (!action.IsValidPiece(piece.pieceType)) return false;
 
             // Ignore collisions between piece colliders and all robot colliders during release
-            Transform robotRoot = piece.owner != null ? piece.owner.root : null;
+            Transform robotRoot = null;
+            if (piece.owner != null)
+            {
+                var swerve = piece.owner.GetComponentInParent<SwerveController>();
+                if (swerve != null) robotRoot = swerve.transform;
+                else robotRoot = piece.owner.root;
+            }
+            
             if (robotRoot != null)
             {
                 var robotColliders = robotRoot.GetComponentsInChildren<Collider>(true);
@@ -193,6 +210,10 @@ namespace BuilderLib
             
             piece.owner = null;
         
+            rb.WakeUp();
+            
+            
+
             return true;
         }
 

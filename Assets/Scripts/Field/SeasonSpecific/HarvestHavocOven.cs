@@ -419,8 +419,8 @@ namespace Field.SeasonSpecific
             if (rb != null)
             {
                 rb.isKinematic = false;
-                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                
+                
                 rb.velocity = rollDir * 2.5f;
                 rb.angularVelocity = new Vector3(0f, 0f, (blue ? 1f : -1f) * 6f);
             }

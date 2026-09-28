@@ -16,6 +16,18 @@ public class GamePiece: MonoBehaviour
     [HideInInspector] public float startingDistance;
     private bool hasId;
 
+    public static readonly HashSet<GamePiece> AllPieces = new HashSet<GamePiece>();
+
+    private void OnEnable()
+    {
+        AllPieces.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        AllPieces.Remove(this);
+    }
+
     private void Start()
     {
         hasId = false;
