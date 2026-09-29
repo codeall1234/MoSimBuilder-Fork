@@ -146,7 +146,7 @@ public class SpawnGamePiece : MonoBehaviour
 
         for (int i = 0; i < numColliders; i++)
         {
-            var piece = Utils.FindParentObjectComponent<GamePiece>(_overlapResults[i].gameObject);
+            var piece = _overlapResults[i].gameObject.GetComponentInParent<GamePiece>();
             
             if (!piece || piece.pieceType != peiceType || piece.state != GamePieceState.World) 
                 continue;

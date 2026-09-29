@@ -136,8 +136,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isBlue: 1
-  tableZoneColliders:
-  - {fileID: 8098813639921995046}
 --- !u!1 &3486767544852846553
 GameObject:
   m_ObjectHideFlags: 0
@@ -1979,11 +1977,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4586151402057399414, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_Name
-      value: RedPantry
+      value: BluePantry
       objectReference: {fileID: 0}
     - target: {fileID: 8736816012444614438, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 13.46766
       objectReference: {fileID: 0}
     - target: {fileID: 8736816012444614438, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2373,6 +2371,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 3
   carrotCakePoints: 8
   depotSpawnPoint: {fileID: 0}
@@ -2422,6 +2421,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 5
   carrotCakePoints: 12
   depotSpawnPoint: {fileID: 0}
@@ -2768,6 +2768,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 5
   carrotCakePoints: 12
   depotSpawnPoint: {fileID: 0}
@@ -3330,6 +3331,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 3
   carrotCakePoints: 8
   depotSpawnPoint: {fileID: 0}
@@ -3406,6 +3408,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 4
   carrotCakePoints: 10
   depotSpawnPoint: {fileID: 0}
@@ -3644,6 +3647,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 4
   carrotCakePoints: 10
   depotSpawnPoint: {fileID: 0}
@@ -4936,6 +4940,8 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  carrotPoints: 2
+  carrotCakePoints: 1
   carrotCakePrefab: {fileID: 924801543284088058}
   depotSpawnPoint: {fileID: 0}
 --- !u!4 &7160297810219238698 stripped
@@ -172134,11 +172140,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4586151402057399414, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_Name
-      value: BluePantry
+      value: RedPantry
       objectReference: {fileID: 0}
     - target: {fileID: 8736816012444614438, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 13.46766
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8736816012444614438, guid: 37508a5c319be974eb9894a663ddd9a6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -172474,6 +172480,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 4
   carrotCakePoints: 10
   depotSpawnPoint: {fileID: 0}
@@ -172604,6 +172611,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 3
   carrotCakePoints: 8
   depotSpawnPoint: {fileID: 0}
@@ -172842,6 +172850,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 4
   carrotCakePoints: 10
   depotSpawnPoint: {fileID: 0}
@@ -173355,6 +173364,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 5
   carrotCakePoints: 12
   depotSpawnPoint: {fileID: 0}
@@ -173431,6 +173441,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 3
   carrotCakePoints: 8
   depotSpawnPoint: {fileID: 0}
@@ -173912,6 +173923,7 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  level: 1
   carrotPoints: 5
   carrotCakePoints: 12
   depotSpawnPoint: {fileID: 0}
@@ -177952,6 +177964,8 @@ MonoBehaviour:
   autoScoreToAdd: 0
   scorePieces: 0300000004000000
   occupyColliders: []
+  carrotPoints: 2
+  carrotCakePoints: 1
   carrotCakePrefab: {fileID: 2270292359331358532}
   depotSpawnPoint: {fileID: 0}
 --- !u!64 &8826319856168291818
