@@ -1,6 +1,5 @@
 using System;
 using MyBox;
-using UnityEditor;
 using UnityEngine;
 using Util;
 
@@ -64,7 +63,7 @@ public class BuildArm : BuildMechanism
     // Start is called before the first frame update
     void Start()
     {
-        if (EditorApplication.isPlaying)
+        if (Application.isPlaying)
         {
             CreateAngleHolderParent();
             GenRB();
@@ -103,7 +102,7 @@ public class BuildArm : BuildMechanism
                 break;
         }
         
-        if (!EditorApplication.isPlaying)
+        if (!Application.isPlaying)
         {
             if (setPoints != null)
             {
@@ -131,7 +130,7 @@ public class BuildArm : BuildMechanism
         
             signedAngle = Mathf.Repeat(signedAngle, 360);
 
-            if (!EditorApplication.isPlaying)
+            if (!Application.isPlaying)
             {
 
             }
@@ -447,3 +446,4 @@ public class BuildArm : BuildMechanism
         _rigidbody.collisionDetectionMode = CollisionDetectionMode.Discrete;
     }
 }
+

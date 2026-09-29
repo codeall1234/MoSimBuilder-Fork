@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using UnityEditor;
 using UnityEngine;
 using Util;
 
@@ -108,3 +107,4 @@ public class GeneratePart : MonoBehaviour
         InvokeRepeating(nameof(run), 0f, 0.2f); //does the same thing as fixed update but doesnt require it be selected in editor
     }
 }
+

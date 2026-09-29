@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using BuilderLib;
 using MyBox;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Util;
@@ -36,7 +35,7 @@ public class BuildNode: MonoBehaviour
     
     private void Start()
     {
-        if (!EditorApplication.isPlaying) return;
+        if (!Application.isPlaying) return;
         
         foreach (var child in Utils.GetAllChildren(transform))
         {
@@ -86,7 +85,7 @@ public class BuildNode: MonoBehaviour
     void Update()
     {
         
-        if (!EditorApplication.isPlaying)
+        if (!Application.isPlaying)
         {
             bool hasIntake = false;
             if (Actions != null)
@@ -532,5 +531,6 @@ public class NodeAction
     private bool SpeedVisible() => (IsNotOuttake() && Animate) || IsOuttake();
     private bool AngularVisible() => (IsNotOuttake() && Animate);
 }
+
 
 

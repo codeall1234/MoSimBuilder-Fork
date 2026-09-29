@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using MyBox;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -100,7 +99,7 @@ public class BuildFrame : MonoBehaviour
         Startup();
         BuildBumpers();
 
-        if (EditorApplication.isPlaying)
+        if (Application.isPlaying)
         {
             gameObject.AddComponent<RestartMatch>();
             
@@ -554,3 +553,4 @@ public class BuildFrame : MonoBehaviour
         }
     }
 }
+

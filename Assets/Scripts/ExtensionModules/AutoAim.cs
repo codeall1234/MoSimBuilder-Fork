@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using MyBox;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Util;
@@ -62,7 +61,7 @@ public class AutoAim : MonoBehaviour
     private bool WhenAtSetpoint() => targetWhen == AimAtWhen.AtSetpoint;
     private bool WhenButton() => targetWhen == AimAtWhen.WhenPressing;
     private bool WhenWithinRange() => targetWhen == AimAtWhen.WithinRange;
-    private bool IsPlaying() => EditorApplication.isPlaying;
+    private bool IsPlaying() => Application.isPlaying;
 
     private SwerveController controller;
     private PIDController _steeringPIDController;
@@ -72,7 +71,7 @@ public class AutoAim : MonoBehaviour
 
     private void Start()
     {
-        if (!EditorApplication.isPlaying) return;
+        if (!Application.isPlaying) return;
         
         var foundTargets = Utils.FindGameObjectsOnLayer("AutoAngleNodes");
         
@@ -115,7 +114,7 @@ public class AutoAim : MonoBehaviour
     {
         connectedTo = drivingMechanism ? drivingMechanism.name : "none";
 
-        if (!EditorApplication.isPlaying) return;
+        if (!Application.isPlaying) return;
 
         // Initialize PlayerInput if needed (similar to AutoAlign pattern)
         if (!_playerInput && targetWhen == AimAtWhen.WhenPressing)

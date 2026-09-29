@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using MyBox;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Util;
@@ -111,7 +110,7 @@ public class PointAtTarget : MonoBehaviour
     //runs on editor change
     private void OnValidate()
     {
-        if (EditorApplication.isPlaying)
+        if (Application.isPlaying)
         {
             UpdateTable(interpolationTable);
         }
@@ -267,3 +266,4 @@ public class PointAtTarget : MonoBehaviour
         public int Compare(DistanceValue x, DistanceValue y) => x.distance.CompareTo(y.distance);
     }
 }
+

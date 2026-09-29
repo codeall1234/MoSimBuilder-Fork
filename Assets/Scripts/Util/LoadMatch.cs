@@ -5,7 +5,6 @@ using System.Linq;
 using MyBox;
 using NUnit.Framework;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
@@ -81,11 +80,11 @@ public class LoadMatch : MonoBehaviour
         selectedSeasonIndex = robotSeasonSelected.selectedIndex;
         selectedSeasonName = robotSeasonSelected.selectedName;
         
-        if (!EditorApplication.isPlayingOrWillChangePlaymode && RobotLoaded())
+        if (!Application.isPlayingOrWillChangePlaymode && RobotLoaded())
         {
             DeleteRobot();
         }
-        if (EditorApplication.isPlaying) return;
+        if (Application.isPlaying) return;
         
         if (!CheckField())
         {
@@ -350,3 +349,4 @@ public class LoadMatch : MonoBehaviour
         }
     }
 }
+

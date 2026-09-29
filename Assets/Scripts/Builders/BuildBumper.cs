@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using MyBox;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Util;
@@ -81,7 +80,7 @@ public class BuildBumper : GeneratePart
 
     private void buildObjects()
     {
-        if (EditorApplication.isPlaying) return;
+        if (Application.isPlaying) return;
         switch (units)
         {
             case Units.Inch:
@@ -142,3 +141,4 @@ public class BuildBumper : GeneratePart
         }
     }
 }
+

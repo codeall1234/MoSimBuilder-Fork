@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using Util;
 
@@ -51,7 +50,7 @@ public class BuildCollider : MonoBehaviour
 
     private void buildObjects()
     {
-        if (EditorApplication.isPlaying) return;
+        if (Application.isPlaying) return;
 
         if (!box)
         {
@@ -66,3 +65,4 @@ public class BuildCollider : MonoBehaviour
         box.transform.localRotation = Quaternion.identity;
     }
 }
+

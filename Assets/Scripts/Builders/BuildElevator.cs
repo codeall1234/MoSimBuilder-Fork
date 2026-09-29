@@ -1,6 +1,5 @@
 using System;
 using MyBox;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
 using Util;
@@ -95,7 +94,7 @@ public class Buildelevator : BuildMechanism
     {
         Startup();
 
-        if (EditorApplication.isPlaying)
+        if (Application.isPlaying)
         {
             Initialize();
         }
@@ -189,7 +188,7 @@ public class Buildelevator : BuildMechanism
                 break;
         }
 
-        if (!EditorApplication.isPlaying)
+        if (!Application.isPlaying)
         {
             
             BuildModel();
