@@ -645,13 +645,6 @@ namespace Field.SeasonSpecific
             if (robotRoot.name.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0) return IsBlueAlliance;
             if (robotRoot.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return !IsBlueAlliance;
 
-            // In single player practice (1 active robot), allow player to receive carrots from any depot
-            var swerves = FindObjectsOfType<SwerveController>();
-            if (swerves == null || swerves.Length <= 1)
-            {
-                return true;
-            }
-
             bool robotIsBlue = IsRobotBlueAlliance(robotRoot);
             return robotIsBlue == IsBlueAlliance;
         }
