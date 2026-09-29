@@ -23,7 +23,7 @@ public class RebuiltShifts : ScoreOnlyOnce
 
     private void Awake()
     {
-        var fms = FindObjectOfType<FMS>();
+        var fms = FindFirstObjectByType<FMS>();
         if (fms != null)
         {
             fms.matchTime = seasonMatchTime;
@@ -164,3 +164,4 @@ public class RebuiltShifts : ScoreOnlyOnce
         EndGame,
     }
 }
+

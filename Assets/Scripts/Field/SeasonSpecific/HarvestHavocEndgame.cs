@@ -145,7 +145,7 @@ namespace Field.SeasonSpecific
             Bounds zoneBounds = GetTableZoneBounds();
             HashSet<GameObject> parkedRobots = new HashSet<GameObject>();
 
-            var robots = FindObjectsOfType<SwerveController>();
+            var robots = FindObjectsByType<SwerveController>(FindObjectsSortMode.None);
             foreach (var swerve in robots)
             {
                 if (swerve == null) continue;
@@ -224,3 +224,4 @@ namespace Field.SeasonSpecific
         }
     }
 }
+

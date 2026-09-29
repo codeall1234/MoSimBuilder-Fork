@@ -5,7 +5,7 @@ using Util;
 
 public class LookAtRobot : MonoBehaviour
 {
-    [SerializeField] private Transform camera;
+    [SerializeField] private Transform cam;
     private LoadMatch loadMatch;
 
     private Transform target;
@@ -29,7 +29,8 @@ public class LookAtRobot : MonoBehaviour
     {
         if (lookTo && target != null)
         {
-          camera.LookAt(target);
+          cam.LookAt(target);
         }
     }
 }
+

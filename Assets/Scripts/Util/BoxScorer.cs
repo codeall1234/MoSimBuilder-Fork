@@ -209,7 +209,7 @@ namespace Util
 
             // Permanently ignore collisions between the scored piece and all robot colliders
             // to completely eliminate PhysX kinematic depenetration impulses against the robot
-            var robots = FindObjectsOfType<SwerveController>();
+            var robots = FindObjectsByType<SwerveController>(FindObjectsSortMode.None);
             var pieceColliders = piece.GetComponentsInChildren<Collider>(true);
             foreach (var robot in robots)
             {
@@ -259,3 +259,4 @@ namespace Util
         }
     }
 }
+

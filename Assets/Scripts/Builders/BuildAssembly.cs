@@ -20,7 +20,7 @@ namespace Generators
 
         private List<string> names = new List<string>();
         
-        private static bool alreadyReset;
+        // private static bool alreadyReset;
 
         // Start is called before the first frame update
         private void Start()
@@ -36,7 +36,7 @@ namespace Generators
         // Update is called once per frame
         void Update()
         {
-            alreadyReset = false;
+            // alreadyReset = false;
             
             loadedAssembly = Resources.LoadAll<GameObject>("Parts/Assembly") as GameObject[];
             

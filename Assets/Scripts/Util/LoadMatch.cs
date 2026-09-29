@@ -80,7 +80,11 @@ public class LoadMatch : MonoBehaviour
         selectedSeasonIndex = robotSeasonSelected.selectedIndex;
         selectedSeasonName = robotSeasonSelected.selectedName;
         
-        if (!Application.isPlayingOrWillChangePlaymode && RobotLoaded())
+#if UNITY_EDITOR
+        if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode && RobotLoaded())
+#else
+        if (!Application.isPlaying && RobotLoaded())
+#endif
         {
             DeleteRobot();
         }
@@ -157,7 +161,7 @@ public class LoadMatch : MonoBehaviour
     public void ResetField()
     {
         // 1. Destroy all loose or spawned GamePiece objects in the scene so old carrots/cakes are removed
-        var existingPieces = FindObjectsOfType<GamePiece>();
+        var existingPieces = FindObjectsByType<GamePiece>(FindObjectsSortMode.None);
         foreach (var p in existingPieces)
         {
             if (p != null)
@@ -349,4 +353,5 @@ public class LoadMatch : MonoBehaviour
         }
     }
 }
+
 

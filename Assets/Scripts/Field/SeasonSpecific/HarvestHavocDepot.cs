@@ -158,7 +158,7 @@ namespace Field.SeasonSpecific
 
             // 3. Any GamePiece in scene owned by the robot or resting physically inside robot frame
             Vector3 rPos = robot.transform.position;
-            var allPieces = FindObjectsOfType<GamePiece>();
+            var allPieces = FindObjectsByType<GamePiece>(FindObjectsSortMode.None);
             foreach (var p in allPieces)
             {
                 if (p == null) continue;
@@ -451,7 +451,7 @@ namespace Field.SeasonSpecific
 
             if (_cachedRobot == null)
             {
-                _cachedRobot = FindObjectOfType<SwerveController>();
+                _cachedRobot = FindFirstObjectByType<SwerveController>();
             }
             if (_cachedRobot == null) return;
 
@@ -490,7 +490,7 @@ namespace Field.SeasonSpecific
         {
             if (!CanFeed()) return;
 
-            if (_cachedRobot == null) _cachedRobot = FindObjectOfType<SwerveController>();
+            if (_cachedRobot == null) _cachedRobot = FindFirstObjectByType<SwerveController>();
             if (_cachedRobot == null) return;
 
             Vector3 mouthPos = GetRampMouthPosition();
@@ -548,7 +548,7 @@ namespace Field.SeasonSpecific
 
             // Parent to field holder so it is properly managed and destroyed on Reset
             Transform parentTransform = null;
-            var loadMatch = FindObjectOfType<LoadMatch>();
+            var loadMatch = FindFirstObjectByType<LoadMatch>();
             if (loadMatch != null && loadMatch.getFieldHolder() != null)
             {
                 parentTransform = loadMatch.getFieldHolder().transform;
@@ -625,7 +625,7 @@ namespace Field.SeasonSpecific
             if (robot.name.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0) return false;
 
             // 2. FMS spawn check (Blue is at positive X > 0, Red is at negative X < 0)
-            var fms = FindObjectOfType<FMS>();
+            var fms = FindFirstObjectByType<FMS>();
             if (fms != null && fms.defaultSpawn != null)
             {
                 return fms.defaultSpawn.position.x > 0f;
@@ -657,3 +657,4 @@ namespace Field.SeasonSpecific
         }
     }
 }
+

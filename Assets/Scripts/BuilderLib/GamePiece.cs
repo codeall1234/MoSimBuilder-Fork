@@ -40,7 +40,7 @@ public class GamePiece: MonoBehaviour
         if (originalParent == null)
         {
             var core = Utils.FindParentObjectComponent<LoadMatch>(gameObject);
-            if (core == null) core = FindObjectOfType<LoadMatch>();
+            if (core == null) core = FindFirstObjectByType<LoadMatch>();
             if (core != null && core.getFieldHolder() != null && core.getFieldHolder().transform.childCount > 0)
             {
                 originalParent = core.getFieldHolder().transform.GetChild(0);
@@ -53,3 +53,4 @@ public class GamePiece: MonoBehaviour
         hasId = true;
     }
 }
+
